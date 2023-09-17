@@ -8,12 +8,24 @@ export default function Home() {
   const [items, setItems] = useState([]);
 
   const addItemToList = (item) => {
-    console.log(item, items);
     setItems([...items, item]);
   };
-
+  const updateItemById = (id, keys) => {
+    items.forEach((item, index)=>{
+      if (item.id === id) {
+        items[index] = Object.assign(item, keys);
+      }
+    });
+    setItems([...items]);
+  };
+  const selectItem = (i) => {
+    items.forEach((item, index)=>{
+      items[index].selected = item.id === i.id;
+    });
+    setItems([...items]);
+  }
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-4">
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
         <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
           Welcome to &nbsp;
@@ -40,9 +52,9 @@ export default function Home() {
       </div>
 
 
-        <div className="flex flex-row overflow-x-auto w-full justify-around">
+        <div className="flex flex-row overflow-x-auto w-full justify-around h-[76vh]">
             <div className="flex w-half py-2 sm:px-6 lg:px-8">
-              <div className="overflow-x-auto inline-block" style={{maxHeight:'50vh'}}>
+              <div className="overflow-x-auto inline-block" style={{maxHeight:'76vh'}}>
                 <table className="min-w-full text-left text-sm font-light">
                   <thead className="border-b font-medium dark:border-neutral-500">
                   <tr>
@@ -50,20 +62,23 @@ export default function Home() {
                     <th scope="col" className="px-6 py-4">Name</th>
                     <th scope="col" className="px-6 py-4">Type</th>
                     <th scope="col" className="px-6 py-4">Side</th>
-                    <th scope="col" className="px-6 py-4">Column</th>
-                    <th scope="col" className="px-6 py-4">Size Range</th>
+                    <th scope="col" className="px-6 py-4">Offset</th>
+                    <th scope="col" className="px-6 py-4">Min</th>
+                    <th scope="col" className="px-6 py-4">Max</th>
                   </tr>
                   </thead>
                   <tbody>
                   {items.map((item, index) => (
-                      <tr key={index} className="border-b dark:border-neutral-500">
+                      <tr key={index} className={item.selected? "bg-sky-500/50"
+                          : "border-b dark:border-neutral-500"} onClick={() => selectItem(item)}>
                         <td className="whitespace-nowrap px-6 py-4 font-medium hidden">{index}</td>
                         <td className="whitespace-nowrap px-6 py-4">{item.name}</td>
-                        <td className="whitespace-nowrap px-6 py-4">{item.dropdown1}</td>
+                        <td className="whitespace-nowrap px-6 py-4">{item.dropdown1.substring(0,3)}</td>
                         <td className="whitespace-nowrap px-6 py-4">{item.dropdown2}</td>
                         <td className="whitespace-nowrap px-6 py-4">{item.column}</td>
-                        <td className="whitespace-nowrap px-6 py-4">{item.dropdown1 !== inputTypes[1] ?
-                            item.minLength + ' - ' + item.maxLength : item.minLength} cm</td>
+                        <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.minLength} cm</td>
+                        <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.dropdown1 !== inputTypes[1] ?
+                            item.maxLength + 'cm' :'-'} </td>
                       </tr>
                   ))}
                   </tbody>
@@ -71,13 +86,12 @@ export default function Home() {
               </div>
             </div>
           <div className="flex flex-col overflow-x-auto w-half">
-            <SVGDesigner items={items} />
+            <SVGDesigner items={items} selectItem={selectItem} updateItemById={updateItemById}/>
           </div>
 
         </div>
 
-        <ItemInput onAddItem={addItemToList} />
-
+        <ItemInput onAddItem={addItemToList}  />
 
       <div></div>
     </main>

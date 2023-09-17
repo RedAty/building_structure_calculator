@@ -1,4 +1,4 @@
-#Building Structure Calculator
+# Building Structure Calculator
 
 ![Another Try](./public/screenshot.png)
 

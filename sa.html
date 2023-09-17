@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    const jsonData = {
+        "horizontal": [
+            [{"length": 100}, {"length": 80}],
+            [{"length": 70}, {"length": 60}]
+        ],
+        "vertical": [
+            [{"length": 200}, {"length": 150}],
+            [{"length": 180}, {"length": 140}]
+        ]
+    };
+
+    const svgNS = "http://www.w3.org/2000/svg";
+
+    function generateSVG(data) {
+        const svgElem = document.createElementNS(svgNS, "svg");
+        svgElem.setAttribute('width', '1000');
+        svgElem.setAttribute('height', '1000');
+
+        const baseX = 10;  // start position for columns
+        const baseY = 10;  // start position for rows
+        const spacing = 50; // space between lines
+        const columnSpacing = 200; // space between columns
+        const lineWidth = 4; // width of the rectangle representing the line
+
+        let currentRowY = baseY;
+
+        // Draw horizontal lines
+        for (let row of data.horizontal) {
+            let currentX = baseX;
+            for (let item of row) {
+                const rectElem = document.createElementNS(svgNS, "rect");
+                rectElem.setAttribute('x', currentX);
+                rectElem.setAttribute('y', currentRowY - lineWidth / 2);
+                rectElem.setAttribute('width', item.length);
+                rectElem.setAttribute('height', lineWidth);
+                rectElem.setAttribute('fill', 'white');
+                rectElem.setAttribute('stroke', 'black');
+                rectElem.setAttribute('stroke-width', '1');
+                svgElem.appendChild(rectElem);
+
+                currentX += item.length;
+            }
+            currentRowY += spacing;
+        }
+
+        let currentColumnX = baseX;
+
+        // Draw vertical lines
+        for (let column of data.vertical) {
+            let currentY = baseY; // start vertical lines below the horizontal ones
+            for (let item of column) {
+                const rectElem = document.createElementNS(svgNS, "rect");
+                rectElem.setAttribute('x', currentColumnX - lineWidth / 2);
+                rectElem.setAttribute('y', currentY);
+                rectElem.setAttribute('width', lineWidth);
+                rectElem.setAttribute('height', item.length);
+                rectElem.setAttribute('fill', 'white');
+                rectElem.setAttribute('stroke', 'black');
+                rectElem.setAttribute('stroke-width', '1');
+                svgElem.appendChild(rectElem);
+
+                currentY += item.length;
+            }
+            currentColumnX += columnSpacing;
+        }
+
+        return svgElem;
+    }
+
+    const svgElement = generateSVG(jsonData);
+    document.body.appendChild(svgElement);
+</script>
+</body>
+</html>

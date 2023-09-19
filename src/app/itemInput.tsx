@@ -12,10 +12,25 @@ export const inputSides = [
 export const DEFAULTS = {
     min: 50,
     max: 50,
-    column: 0
+    column: 0,
+    row: 0,
+    absoluteEditor: true
 };
 
-const tailwindCSS = {
+export interface ItemType {
+
+    id: string|number,
+    name: string,
+    type: string,
+    side: string,
+    minLength: string|number,
+    maxLength: string|number,
+    column: string|number,
+    row: string|number,
+    selected?: boolean
+
+}
+export const tailwindCSS = {
     label: "block mb-2 text-sm font-medium text-gray-900 dark:text-white",
     text: "shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg " +
         "focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" +
@@ -30,18 +45,19 @@ const tailwindCSS = {
 
 }
 
-export function ItemInput({ onAddItem }) {
-    const [name, setName] = useState('');
-    const [dropdown1, setDropdown1] = useState(inputTypes[0]);
-    const [dropdown2, setDropdown2] = useState(inputSides[1]);
+export function ItemInput({ onAddItem, absoluteEditor }) {
+    const [name, setName] = useState(new Date().getTime().toString().substring(6));
+    const [type, setType] = useState(inputTypes[0]);
+    const [side, setSide] = useState(inputSides[1]);
     const [minLength, setMinLength] = useState(DEFAULTS.min);
     const [maxLength, setMaxLength] = useState(DEFAULTS.max);
     const [column, setColumn] = useState(DEFAULTS.column);
+    const [row, setRow] = useState(DEFAULTS.row);
     const inputRef = useRef(null);
 
     const handleNumeric2Change = (value) => {
         setMaxLength(value);
-        if (dropdown1 === inputTypes[1]) {
+        if (type === inputTypes[1]) {
             setMinLength(value);
         }
     };
@@ -51,15 +67,16 @@ export function ItemInput({ onAddItem }) {
             const newItem = {
                 id: new Date().getTime(),
                 name,
-                dropdown1,
-                dropdown2,
+                type,
+                side,
                 minLength,
                 maxLength,
-                column
+                column,
+                row
             };
 
             onAddItem(newItem);
-            setName('');
+            setName(new Date().getTime().toString().substring(6));
             if (inputRef.current) {
                 inputRef.current.value = '';
             }
@@ -86,8 +103,8 @@ export function ItemInput({ onAddItem }) {
             <div className="flex flex-col ml-2">
                 <label htmlFor="types" className={tailwindCSS.label}>Type</label>
 
-                <select id={'types'} defaultValue={dropdown1}
-                        onChange={(e) => setDropdown1(e.target.value)}
+                <select id={'types'} defaultValue={type}
+                        onChange={(e) => setType(e.target.value)}
                         className={tailwindCSS.select} >
                     {inputTypes.map(type=>(<option key={type}>{type}</option>))}
                 </select>
@@ -95,13 +112,13 @@ export function ItemInput({ onAddItem }) {
             <div className="flex flex-col ml-2">
                 <label htmlFor="sides" className={tailwindCSS.label}>Type</label>
 
-                <select id="sides" defaultValue={dropdown2}
-                        onChange={(e) => setDropdown2(e.target.value)}
+                <select id="sides" defaultValue={side}
+                        onChange={(e) => setSide(e.target.value)}
                         className={tailwindCSS.select} >
                     {inputSides.map(type=>(<option key={type}>{type}</option>))}
                 </select>
             </div>
-            {dropdown1 !== inputTypes[1] && (
+            {type !== inputTypes[1] && (
                 <div className="flex flex-col ml-2">
 
                     <label htmlFor="min" className={tailwindCSS.label}>Min</label>
@@ -113,7 +130,7 @@ export function ItemInput({ onAddItem }) {
             )}
 
             <div className="flex flex-col ml-2">
-                <label htmlFor="max" className={tailwindCSS.label}>{dropdown1 !== inputTypes[1] ? 'Max' : 'Size'}</label>
+                <label htmlFor="max" className={tailwindCSS.label}>{type !== inputTypes[1] ? 'Max' : 'Size'}</label>
 
                 <input id="max" type="number" defaultValue={maxLength}
                        onChange={(e) => handleNumeric2Change(Number(e.target.value))}
@@ -121,10 +138,18 @@ export function ItemInput({ onAddItem }) {
             </div>
 
             <div className="flex flex-col ml-2">
-                <label htmlFor="column" className={tailwindCSS.label}>Column</label>
+                <label htmlFor="column" className={tailwindCSS.label}>Offset 1</label>
 
                 <input id="column" type="number" defaultValue={column}
                        onChange={(e) => setColumn(Number(e.target.value))}
+                       className={tailwindCSS.number} />
+            </div>
+
+            <div className={absoluteEditor ? "flex flex-col ml-2" : "flex flex-col ml-2 hidden"}>
+                <label htmlFor="row" className={tailwindCSS.label}>Offset 2</label>
+
+                <input id="row" type="number" defaultValue={row}
+                       onChange={(e) => setRow(Number(e.target.value))}
                        className={tailwindCSS.number} />
             </div>
 

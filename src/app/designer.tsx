@@ -1,9 +1,9 @@
 import {DEFAULTS, inputSides, inputTypes} from "@/app/itemInput";
 import {useEffect, useRef, useState} from "react";
-import {getItemRectDimensions, groupBy, sumArr} from "@/app/lib/calculations";
+import {getItemRectDimensions, getTextAttributesForRect, groupBy, sumArr} from "@/app/lib/calculations";
 
 
-export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor, squareMeterData }) {
+export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor, calculatedData }) {
     const [controllerSettings, setControllerSettings] = useState({
         maxColumn:100,
         minLength:100,
@@ -128,6 +128,12 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
     }
 
     const boundaryRect = getItemRectDimensions(items);
+    const boundarySVGTexts = getTextAttributesForRect(
+        boundaryRect.x-baseX/2,
+        boundaryRect.y-baseY/2,
+        boundaryRect.width + baseX,
+        boundaryRect.height + baseY*2
+    )
 
     function onSelectItem (item) {
         if (item.selected) {
@@ -243,15 +249,44 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
     return (
         <div ref={svgParent} style={{height: '100%', width: '100%'}}>
             <svg width={width} height={height} style={{height: 'calc(100% - 160px)'}}>
-            {svgData.map((item, index)=>
-                (<rect key={index} x={item.x} y={item.y} width={item.width} height={item.height}
-                       fill={'white'} stroke={item.selected ? 'red' : 'black'} strokeWidth={1} onClick={(e)=>onSelectItem(item)}/>)
-            )}
-                <rect x={boundaryRect.x-baseX/2} y={boundaryRect.y-baseY/2}
-                     width={boundaryRect.width + baseX}
-                     height={boundaryRect.height + baseY*2}
-                     stroke="lightgray" strokeWidth={1} fill="none"
-                />
+                <g transform={'translate(19,19)'}>
+                    {svgData.map((item, index)=>
+                        (<rect key={index} x={item.x} y={item.y} width={item.width} height={item.height}
+                               fill={'white'} stroke={item.selected ? 'red' : 'black'} strokeWidth={1} onClick={(e)=>onSelectItem(item)}/>)
+                    )}
+                    <rect x={boundaryRect.x-baseX/2} y={boundaryRect.y-baseY/2}
+                          width={boundaryRect.width + baseX}
+                          height={boundaryRect.height + baseY}
+                          stroke="#bebebe" strokeWidth={1} fill="none"
+                    />
+                    {!calculatedData.modified ? (
+                        <g>
+                            <text
+                                x={boundarySVGTexts.top.x}
+                                y={boundarySVGTexts.top.y}
+                                transform={boundarySVGTexts.top.transform}
+                                fill="#bebebe"
+                            >{calculatedData.width}</text>
+                            <text
+                                x={boundarySVGTexts.bottom.x}
+                                y={boundarySVGTexts.bottom.y}
+                                transform={boundarySVGTexts.bottom.transform} fill="#bebebe"
+                            >{calculatedData.width}</text>
+                            <text
+                                x={boundarySVGTexts.right.x}
+                                y={boundarySVGTexts.right.y}
+                                transform={boundarySVGTexts.right.transform} fill="#bebebe"
+                            >{calculatedData.height}</text>
+                            <text
+                                x={boundarySVGTexts.left.x}
+                                y={boundarySVGTexts.left.y}
+                                transform={boundarySVGTexts.left.transform} fill="#bebebe"
+                            >{calculatedData.height}</text>
+                        </g>
+                    ): (<g />)}
+
+                </g>
+
             </svg>
             <div className="controls flex flex-col">
                 <div className="flex flex-row justify-between">Offset <input className="max-w-[100px] border border-gray-300 text-gray-900 text-sm rounded-lg" ref={rangeNumber} type="number" onChange={changeRangeNumber} defaultValue={controllerSettings.column}/></div>

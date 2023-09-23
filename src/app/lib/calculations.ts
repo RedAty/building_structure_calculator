@@ -52,7 +52,9 @@ export const getItemBoundariesInCM = (items: ItemType[], key : 'calculated'|'min
         x0: minX || 0,
         x1: maxX || 0,
         y0: minY || 0,
-        y1: maxY || 0
+        y1: maxY || 0,
+        width: (maxX || 0) - (minX || 0),
+        height: (maxY || 0) - (minY || 0),
     }
 }
 
@@ -125,4 +127,40 @@ export const sumArr = function (arr: Array<any>, key: string) {
     return arr.reduce(function(total, element) {
         return total + element[key];
     }, 0);
+}
+
+
+export const getTextAttributesForRect = (x: number, y: number, width: number, height: number, fontSize = 20) => {
+    return {
+        top: {
+            x: x + width / 2,
+            y: y - 2,
+            transform: ""
+        },
+        right: {
+            x: x + width  + 2,
+            y: y + height / 2,
+            transform: `rotate(90, ${x + width  + 2}, ${y + height / 2})`
+        },
+        bottom: {
+            x: x + width / 2,
+            y: y + height + fontSize,
+            transform: ""
+        },
+        left: {
+            x: x -2,
+            y: y + height / 2,
+            transform: `rotate(-90, ${x-2}, ${y + height / 2})`
+        }
+    };
+}
+
+export const areaM = (x1: number, y1: number, x2: number, y2: number) => {
+    const width = Math.abs(x2 - x1);
+    const height = Math.abs(y2 - y1);
+    const area = width * height;
+    if (area === Infinity) {
+        return 0;
+    }
+    return ((area/* * DEFAULTS.centimeterPixelRatio*/) / 10000).toFixed(2);
 }

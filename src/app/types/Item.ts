@@ -1,3 +1,4 @@
+import exp from "node:constants";
 
 export interface ItemType {
     id: string|number,
@@ -20,7 +21,9 @@ export interface ItemBoundary {
     x0: number,
     x1: number,
     y0: number,
-    y1: number
+    y1: number,
+    width: number,
+    height: number
 }
 
 export interface RectBoundary {
@@ -28,4 +31,14 @@ export interface RectBoundary {
     width: number,
     y: number,
     height: number
+}
+
+export interface CalculationData {
+    m2: number,
+    width: number,
+    height: number,
+    modified?: boolean,
+    ratio: number,
+    ratioWidth?: number,
+    ratioHeight?: number,
 }

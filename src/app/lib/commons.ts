@@ -3,7 +3,7 @@ import {TextFile} from "@/app/types/textFile";
 export const Commons = {
     downloadAsFile: function (name, body, fileType = 'text/plain') {
         if (!name) {
-            name = Math.floor(new Date().getTime() / 360000) + ".txt";
+            name = Math.floor(new Date().getTime() / 360000) + ".json";
         }
         try {
             let textToSaveAsBlob = new Blob([body], {type: fileType});

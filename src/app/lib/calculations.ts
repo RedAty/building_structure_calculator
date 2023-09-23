@@ -1,5 +1,7 @@
 import {ItemBoundary, ItemType, RectBoundary} from "@/app/types/Item";
-import {inputSides} from "@/app/itemInput";
+import {DEFAULTS, inputSides} from "@/app/itemInput";
+import exp from "node:constants";
+import {base} from "next/dist/build/webpack/config/blocks/base";
 
 export const getItemBoundariesInCM = (items: ItemType[], key : 'calculated'|'minLength'|'maxLength' = 'minLength'): ItemBoundary => {
     const fallbackKey = 'minLength';
@@ -163,4 +165,15 @@ export const areaM = (x1: number, y1: number, x2: number, y2: number) => {
         return 0;
     }
     return ((area/* * DEFAULTS.centimeterPixelRatio*/) / 10000).toFixed(2);
+}
+
+export const convertToCoordinate = (data: number) => {
+    const base = DEFAULTS.baseX || 10;
+    return Math.round((data / DEFAULTS.centimeterPixelRatio) + base - DEFAULTS.lineSize / 2);
+}
+
+export const convertFromCoordinate = (data: number) => {
+    const base = DEFAULTS.baseX || 10;
+
+    return Math.round(((data + DEFAULTS.lineSize / 2) - base) * DEFAULTS.centimeterPixelRatio);
 }

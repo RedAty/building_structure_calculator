@@ -19,6 +19,7 @@ export const DEFAULTS = {
     lineSize: 4,
     baseX: 10,
     baseY: 10,
+    zoomStep: 10
 };
 
 

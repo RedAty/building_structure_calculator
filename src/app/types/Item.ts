@@ -15,6 +15,8 @@ export interface ItemType {
     width?: number,
     height?: number,
     calculated?: number
+    calculatedColumn?: number
+    calculatedRow?: number
 }
 
 export interface ItemBoundary {
@@ -36,9 +38,14 @@ export interface RectBoundary {
 export interface CalculationData {
     m2: number,
     width: number,
+    calculatedWidth: number,
     height: number,
+    calculatedHeight: number,
     modified?: boolean,
     ratio: number,
     ratioWidth?: number,
     ratioHeight?: number,
+    isOn: boolean,
+
+
 }

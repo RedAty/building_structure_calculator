@@ -5,7 +5,7 @@ import {DEFAULTS, inputSides, inputTypes, ItemInput, tailwindCSS} from "@/app/it
 import {SVGDesigner} from "@/app/designer";
 import {Commons} from "@/app/lib/commons";
 import {CalculationData, ItemBoundary, ItemType} from "@/app/types/Item";
-import {areaM, getItemBoundariesInCM} from "@/app/lib/calculations";
+import {areaM, getItemBoundariesInCM, toFixedNumber} from "@/app/lib/calculations";
 
 
 export default function Home() {
@@ -15,21 +15,28 @@ export default function Home() {
   let itemBoundaries = getItemBoundariesInCM(items);
   const [squareMeter, setSquareMeter] = useState(areaM(itemBoundaries.x0, itemBoundaries.y0, itemBoundaries.x1,  itemBoundaries.y1))
   const [calculatedData, setCalculatedData] = useState({
-    m2: squareMeter, width: itemBoundaries.width, height: itemBoundaries.height, modified: false, ratio: 1
-  } as CalculationData)
+    m2: squareMeter, width: itemBoundaries.width, height: itemBoundaries.height, modified: false, ratio: 1, isOn: false,
+    ratioWidth: 1, ratioHeight: 1
+  } as CalculationData);
+  updateItemCalculations();
+  let itemBoundariesCalculated = getItemBoundariesInCM(items, 'calculated', 'calculatedColumn', 'calculatedRow');
+
 
   const refreshCalculations = () => {
-    console.log(items);
     itemBoundaries = getItemBoundariesInCM(items);
-    console.log(itemBoundaries)
+    updateItemCalculations();
+    itemBoundariesCalculated = getItemBoundariesInCM(items, 'calculated', 'calculatedColumn', 'calculatedRow');
     const m2 = areaM(itemBoundaries.x0, itemBoundaries.y0, itemBoundaries.x1,  itemBoundaries.y1);
     setSquareMeter(m2);
-    if (!calculatedData.modified) {
-      calculatedData.m2 = Number(m2);
-      calculatedData.width = itemBoundaries.width;
-      calculatedData.height = itemBoundaries.height;
-      setCalculatedData(calculatedData);
-    }
+    calculatedData.m2 = Number(m2);
+    calculatedData.width = itemBoundaries.width;
+    calculatedData.height = itemBoundaries.height;
+    console.log(itemBoundaries);
+
+    calculatedData.calculatedWidth = itemBoundariesCalculated.width;
+    calculatedData.calculatedHeight = itemBoundariesCalculated.height;
+
+    setCalculatedData(calculatedData);
   }
   const addItemToList = (item) => {
     setItems([...items, item]);
@@ -86,7 +93,39 @@ export default function Home() {
     setItems([]);
   }
 
-  function changeCalculatedData(e: React.ChangeEvent<HTMLInputElement>, key: 'm2'|'width'|'height') {
+  function checkCalculatedHeader () {
+    const calcM2 = document.getElementById('calcM2') as HTMLInputElement;
+    const calcWidth = document.getElementById('calcWidth') as HTMLInputElement;
+    const calcHeight = document.getElementById('calcHeight') as HTMLInputElement;
+    if (!calcM2 || !calcHeight || !calcWidth) {
+      return false;
+    }
+    if (calcWidth.value && calcHeight.value) {
+      const area = areaM(0,0, Number(calcWidth.value), Number(calcHeight.value));
+      if (calcM2.value !== String(area)) {
+        calcM2.value = String(area);
+        return true
+      }
+    }
+    return false;
+  }
+
+  function updateItemCalculations() {
+    items.forEach(item => {
+      const side = item.side;
+      if (side === inputSides[0]) { // Horizontal
+        item.calculatedRow = toFixedNumber(item.row * calculatedData.ratioWidth);
+        item.calculatedColumn = toFixedNumber(item.column * calculatedData.ratioHeight);
+        item.calculated = toFixedNumber(item.minLength * calculatedData.ratioWidth);
+      } else if (side === inputSides[1]) { // Vertical
+        item.calculatedRow = toFixedNumber(item.row * calculatedData.ratioHeight);
+        item.calculatedColumn = toFixedNumber(item.column * calculatedData.ratioWidth);
+        item.calculated = toFixedNumber(item.minLength * calculatedData.ratioHeight);
+      }
+    });
+  }
+
+  function changeCalculatedData(e: React.ChangeEvent<HTMLInputElement>, key: string /*'m2'|'width'|'height'*/) {
     let calculate = false;
     if (e && e.target && e.target.value) {
       const numeric = Number(e.target.value);
@@ -98,17 +137,21 @@ export default function Home() {
       }
     } else if (e && e.target && e.target.value === '') {
       // User deleted the value
-      if (itemBoundaries.hasOwnProperty(key)) {
+      calculatedData[key] = itemBoundaries[key];
+      /*if (itemBoundaries.hasOwnProperty(key)) {
         calculatedData[key] = itemBoundaries[key];
       } else if (key === 'm2') {
         calculatedData.m2 = Number(squareMeter);
-      }
+      }*/
       calculate = true;
+    }
+    if (key !== "m2") {
+      checkCalculatedHeader();
     }
 
     if (calculate) {
-      calculatedData.ratioWidth = calculatedData.width / itemBoundaries.width;
-      calculatedData.ratioHeight = calculatedData.height / itemBoundaries.height;
+      calculatedData.ratioWidth = (calculatedData.calculatedWidth || calculatedData.width) / itemBoundaries.width;
+      calculatedData.ratioHeight = (calculatedData.calculatedHeight || calculatedData.height) / itemBoundaries.height;
       calculatedData.ratio = calculatedData.m2 / Number(squareMeter);
       if (calculatedData.ratioHeight < 1.09 && calculatedData.ratioHeight > 0.91) {
         calculatedData.ratioHeight = 1;
@@ -120,8 +163,7 @@ export default function Home() {
       const modifiedEarlier = !!calculatedData.modified;
       calculatedData.modified = calculatedData.ratioHeight !== 1 || calculatedData.ratioWidth !== 1 || calculatedData.ratio !== 1;
 
-
-      console.log(calculatedData);
+      updateItemCalculations();
 
       setCalculatedData(calculatedData);
       if (modifiedEarlier !== calculatedData.modified) {
@@ -129,6 +171,11 @@ export default function Home() {
         setItems([...items]);
       }
     }
+  }
+
+  function changeIsCalculatedOn() {
+    calculatedData.isOn = !calculatedData.isOn;
+    setCalculatedData(Object.assign({}, calculatedData));
   }
 
   return (
@@ -165,20 +212,24 @@ export default function Home() {
 
             <label className="block text-sm font-medium text-gray-900 dark:text-white p-1">Targets:</label>
 
-            <input type="m22" id="m22"
-                   className="max-w-[60px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            <input type="calcM2" id="calcM2"
+                   className="max-w-[65px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    placeholder={calculatedData.m2.toString()} onChange={(e)=>changeCalculatedData(e, 'm2')} />
-            <label htmlFor="m22" className="block text-sm font-medium text-gray-900 dark:text-white w-[30px] p-1">m2</label>
+            <label htmlFor="calcM2" className="block text-sm font-medium text-gray-900 dark:text-white w-[30px] p-1">m2</label>
+            <input type="calcWidth" id="calcWidth"
+                   className="max-w-[55px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                   placeholder={calculatedData.width.toString()} onChange={(e)=>changeCalculatedData(e, 'calculatedWidth')} />
+            <label htmlFor="calcWidth" className="block text-sm font-medium text-gray-900 dark:text-white w-[70px] p-1">cm with</label>
+            <input type="calcHeight" id="calcHeight"
+                   className="max-w-[55px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                   placeholder={calculatedData.height.toString()} onChange={(e)=>changeCalculatedData(e, 'calculatedHeight')} />
+            <label htmlFor="calcHeight" className="block text-sm font-medium text-gray-900 dark:text-white w-[85px] p-1">cm height</label>
 
-
-            <input type="m23" id="m23"
-                   className="max-w-[50px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                   placeholder={calculatedData.width.toString()} onChange={(e)=>changeCalculatedData(e, 'width')} />
-            <label htmlFor="m23" className="block text-sm font-medium text-gray-900 dark:text-white w-[70px] p-1">cm with</label>
-            <input type="m24" id="m24"
-                   className="max-w-[50px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                   placeholder={calculatedData.height.toString()} onChange={(e)=>changeCalculatedData(e, 'height')} />
-            <label htmlFor="m24" className="block text-sm font-medium text-gray-900 dark:text-white w-[85px] p-1">cm height</label>
+            <div className="flex items-center">
+              <input defaultChecked={calculatedData.isOn} onChange={changeIsCalculatedOn} id="checked-checkbox" type="checkbox" value=""
+                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                <label htmlFor="checked-checkbox" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Calculated</label>
+            </div>
           </div>
 
 
@@ -268,7 +319,7 @@ export default function Home() {
                         <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.minLength} cm</td>
                         <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.type !== inputTypes[1] ?
                             item.maxLength + 'cm' :'-'} </td>
-                        <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.calculated || item.minLength} cm</td>
+                        <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.calculated || '-'} cm</td>
 
                       </tr>
                   ))}
@@ -279,7 +330,7 @@ export default function Home() {
             </div>
           <div className="overflow-x-auto float-left h-full" style={{width:'calc(100% - 790px)'}}>
             <SVGDesigner items={items} selectItem={selectItem} updateItemById={updateItemById}
-                         absoluteEditor={absoluteEditor} calculatedData={calculatedData}/>
+                         absoluteEditor={absoluteEditor} calculatedData={calculatedData} isCalculatedOn={calculatedData.isOn}/>
           </div>
 
         </div>

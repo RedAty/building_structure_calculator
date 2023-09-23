@@ -3,7 +3,8 @@ import {DEFAULTS, inputSides} from "@/app/itemInput";
 import exp from "node:constants";
 import {base} from "next/dist/build/webpack/config/blocks/base";
 
-export const getItemBoundariesInCM = (items: ItemType[], key : 'calculated'|'minLength'|'maxLength' = 'minLength'): ItemBoundary => {
+export const getItemBoundariesInCM = (items: ItemType[], key : 'calculated'|'minLength'|'maxLength' = 'minLength',
+                                      column = 'column', row = 'row'): ItemBoundary => {
     const fallbackKey = 'minLength';
     let minX;
     let minY;
@@ -16,15 +17,15 @@ export const getItemBoundariesInCM = (items: ItemType[], key : 'calculated'|'min
             topY,
             bottomY;
         if (type === inputSides[0]) { // Horizontal
-            leftX = item.row;
-            rightX = item.row + (item[key] === undefined ? item[fallbackKey] : item[key]);
-            topY = item.column;
-            bottomY = item.column;
+            leftX = item[row];
+            rightX = item[row] + (item[key] === undefined ? item[fallbackKey] : item[key]);
+            topY = item[column];
+            bottomY = item[column];
         } else if (type === inputSides[1]) { // Vertical
-            leftX = item.column;
-            rightX = item.column;
-            topY = item.row;
-            bottomY = item.row + (item[key] === undefined ? item[fallbackKey] : item[key]);
+            leftX = item[column];
+            rightX = item[column];
+            topY = item[row];
+            bottomY = item[row] + (item[key] === undefined ? item[fallbackKey] : item[key]);
         } else {
             return;
         }
@@ -157,14 +158,14 @@ export const getTextAttributesForRect = (x: number, y: number, width: number, he
     };
 }
 
-export const areaM = (x1: number, y1: number, x2: number, y2: number) => {
+export const areaM = (x1: number, y1: number, x2: number, y2: number): Number => {
     const width = Math.abs(x2 - x1);
     const height = Math.abs(y2 - y1);
     const area = width * height;
     if (area === Infinity) {
         return 0;
     }
-    return ((area/* * DEFAULTS.centimeterPixelRatio*/) / 10000).toFixed(2);
+    return Number((area / 10000).toFixed(2));
 }
 
 export const convertToCoordinate = (data: number) => {
@@ -176,4 +177,8 @@ export const convertFromCoordinate = (data: number) => {
     const base = DEFAULTS.baseX || 10;
 
     return Math.round(((data + DEFAULTS.lineSize / 2) - base) * DEFAULTS.centimeterPixelRatio);
+}
+
+export const toFixedNumber = (num: number) => {
+    return Number(num.toFixed(2));
 }

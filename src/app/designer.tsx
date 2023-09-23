@@ -11,7 +11,7 @@ import {ItemType} from "@/app/types/Item";
 
 var selectedElement, offset, dragStarted, timeout;
 
-export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor, calculatedData }) {
+export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor, calculatedData, isCalculatedOn }) {
     const [controllerSettings, setControllerSettings] = useState({
         maxColumn:100,
         minLength:100,
@@ -41,6 +41,11 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
         horizontal: [],
         vertical: []
     }
+    const keys = {
+        row: isCalculatedOn ? 'calculatedRow' : 'row',
+        column: isCalculatedOn ? 'calculatedColumn' : 'column',
+        minLength: isCalculatedOn ? 'calculated' : 'minLength',
+    }
     let groupedColumns = groupBy(jsonData[inputSides[0]], 'column');
     for(const item in groupedColumns) {
         data.horizontal.push(groupedColumns[item]);
@@ -62,14 +67,14 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
     const maximums = Math.floor((Math.max(width, height) * centimeterPixelRatio)) || 1000;
     const refreshController = ()=>{
         setControllerSettings({
-            maxColumn: Math.floor(Math.min(Math.max(sumArr(items, 'column') * 1.3, 100), maximums)) || maximums,
-            minLength: Math.floor(Math.min(Math.max(sumArr(items, 'minLength') * 1.3, 100), maximums)) || maximums,
+            maxColumn: Math.floor(Math.min(Math.max(sumArr(items, keys.column) * 1.3, 100), maximums)) || maximums,
+            minLength: Math.floor(Math.min(Math.max(sumArr(items, keys.minLength) * 1.3, 100), maximums)) || maximums,
             maxLength: Math.floor(Math.min(Math.max(sumArr(items, 'maxLength') * 1.3, 100), maximums)) || maximums,
             min: selected ? selected.minLength : 0,
             max: selected ? selected.maxLength : 0,
             column: selected ? selected.column : 0,
-            row: selected ? selected.row : 0,
-            maxRow: Math.floor(Math.min(Math.max(sumArr(items, 'row') * 1.3, 100), maximums)) || maximums
+            row: selected ? selected[keys.row] : 0,
+            maxRow: Math.floor(Math.min(Math.max(sumArr(items, keys.row) * 1.3, 100), maximums)) || maximums
         });
     }
     useEffect(() => {
@@ -91,19 +96,17 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
             let currentX = baseX;
             for (let item of row) {
                 if (absoluteEditor) {
-                    item.x = convertToCoordinate(item.row); //(item.row / centimeterPixelRatio) + baseX - lineSize / 2;
-                    //item.y = currentRowY - lineSize / 2;
-                    item.y = convertToCoordinate(item.column); // (item.column / centimeterPixelRatio) + baseY - lineSize / 2;
+                    item.x = convertToCoordinate(item[keys.row]);
+                    item.y = convertToCoordinate(item[keys.column]);
                 } else {
                     item.x = currentX;
-                    //item.y = currentRowY - lineSize / 2;
-                    item.y = convertToCoordinate(item.column); //(item.column / centimeterPixelRatio) + baseY - lineSize / 2;
+                    item.y = convertToCoordinate(item[keys.column]);
                 }
 
-                item.width =  (item.minLength / centimeterPixelRatio);
+                item.width =  (item[keys.minLength] / centimeterPixelRatio);
                 item.height = lineSize;
 
-                currentX += item.minLength / centimeterPixelRatio;
+                currentX += item[keys.minLength] / centimeterPixelRatio;
                 svgData.push(item);
             }
             currentRowY += columnSpacingY;
@@ -117,19 +120,18 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
         for (let column of data.vertical) {
             let currentY = baseY; // start vertical lines below the horizontal ones
             for (let item of column) {
-                //item.x = currentColumnX - lineSize / 2
                 if (absoluteEditor) {
-                    item.x = convertToCoordinate(item.column); // (item.column / centimeterPixelRatio)+baseX - lineSize / 2
-                    item.y = convertToCoordinate(item.row); // (item.row / centimeterPixelRatio)+baseY - lineSize / 2
+                    item.x = convertToCoordinate(item[keys.column]);
+                    item.y = convertToCoordinate(item[keys.row]);
                 } else {
-                    item.x = convertToCoordinate(item.column); // (item.column / centimeterPixelRatio)+baseX - lineSize / 2
+                    item.x = convertToCoordinate(item[keys.column]);
                     item.y = currentY
                 }
 
                 item.width = lineSize;
-                item.height = (item.minLength / centimeterPixelRatio);
+                item.height = (item[keys.minLength] / centimeterPixelRatio);
 
-                currentY += item.minLength / centimeterPixelRatio;
+                currentY += item[keys.minLength] / centimeterPixelRatio;
                 svgData.push(item);
             }
             currentColumnX += columnSpacingX;
@@ -142,7 +144,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
         boundaryRect.y-baseY/2,
         boundaryRect.width + baseX,
         boundaryRect.height + baseY*2
-    )
+    );
 
     function getMousePosition(evt) {
         const CTM = svg.current.getScreenCTM();
@@ -153,7 +155,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
     }
 
     function startDrag(evt) {
-        if (evt.target.classList.contains('draggable')) {
+        if (!isCalculatedOn && evt.target.classList.contains('draggable')) {
             const id = evt.target.getAttribute('id');
             if (timeout){
                 clearTimeout(timeout);
@@ -172,7 +174,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
     }
 
     function drag(evt) {
-        if (selectedElement && dragStarted) {
+        if (!isCalculatedOn && selectedElement && dragStarted) {
             evt.preventDefault();
             const coord = getMousePosition(evt);
             selectedElement.setAttributeNS(null, "x",  coord.x - offset.x);
@@ -187,7 +189,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
         timeout = setTimeout(()=>{
             dragStarted = false;
         }, 1000);
-        if (selectedElement) {
+        if (!isCalculatedOn && selectedElement) {
             const id = selectedElement.getAttribute('id');
             const item = items.find(i=>String(i.id) === String(id)) as ItemType | null;
             if (item) {
@@ -385,41 +387,42 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
                                 onContextMenu={(e)=>rotateItem(item, e)}
                         />)
                     )}
-                    <rect x={boundaryRect.x-baseX/2} y={boundaryRect.y-baseY/2}
-                          width={boundaryRect.width + baseX}
-                          height={boundaryRect.height + baseY}
-                          stroke="#bebebe" strokeWidth={1} fill="none"
-                    />
-                    {!calculatedData.modified ? (
+                    {svgData.length > 1 && (<rect x={boundaryRect.x-baseX/2} y={boundaryRect.y-baseY/2}
+                                             width={boundaryRect.width + baseX}
+                                             height={boundaryRect.height + baseY}
+                                             stroke="#bebebe" strokeWidth={1} fill="none"
+                    />)}
+
+                    {svgData.length > 1 ? (
                         <g className="pointer-events-none" style={{userSelect: "none"}}>
                             <text className="pointer-events-none" style={{userSelect: "none"}}
                                 x={boundarySVGTexts.top.x}
                                 y={boundarySVGTexts.top.y}
                                 transform={boundarySVGTexts.top.transform}
                                 fill="#bebebe"
-                            >{calculatedData.width}</text>
+                            >{isCalculatedOn ? calculatedData.calculatedWidth || calculatedData.width : calculatedData.width}</text>
                             <text className="pointer-events-none" style={{userSelect: "none"}}
                                 x={boundarySVGTexts.bottom.x}
                                 y={boundarySVGTexts.bottom.y}
                                 transform={boundarySVGTexts.bottom.transform} fill="#bebebe"
-                            >{calculatedData.width}</text>
+                            >{isCalculatedOn ? calculatedData.calculatedWidth || calculatedData.width : calculatedData.width}</text>
                             <text className="pointer-events-none" style={{userSelect: "none"}}
                                 x={boundarySVGTexts.right.x}
                                 y={boundarySVGTexts.right.y}
                                 transform={boundarySVGTexts.right.transform} fill="#bebebe"
-                            >{calculatedData.height}</text>
+                            >{isCalculatedOn ? calculatedData.calculatedHeight || calculatedData.height : calculatedData.height}</text>
                             <text className="pointer-events-none" style={{userSelect: "none"}}
                                 x={boundarySVGTexts.left.x}
                                 y={boundarySVGTexts.left.y}
                                 transform={boundarySVGTexts.left.transform} fill="#bebebe"
-                            >{calculatedData.height}</text>
+                            >{isCalculatedOn ? calculatedData.calculatedHeight || calculatedData.height : calculatedData.height}</text>
                         </g>
                     ): (<g />)}
 
                 </g>
 
             </svg>
-            <div className="controls flex flex-col">
+            <div className={isCalculatedOn ? "hidden" : "controls flex flex-col"}>
                 <div className="flex flex-row justify-between">Offset <input className="max-w-[100px] border border-gray-300 text-gray-900 text-sm rounded-lg" ref={rangeNumber} type="number" onChange={changeRangeNumber} defaultValue={controllerSettings.column}/></div>
                 <input ref={range} type="range" onChange={changeRange} min={0} max={controllerSettings.maxColumn}
             defaultValue={controllerSettings.column}/>

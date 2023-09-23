@@ -1,25 +1,9 @@
-import {inputSides, inputTypes} from "@/app/itemInput";
-import {MutableRefObject, useCallback, useEffect, useRef, useState} from "react";
+import {DEFAULTS, inputSides, inputTypes} from "@/app/itemInput";
+import {useEffect, useRef, useState} from "react";
+import {getItemRectDimensions, groupBy, sumArr} from "@/app/lib/calculations";
 
 
-const groupBy = function(xs: Array<any>, key: string) {
-    if (!xs || !Array.isArray(xs)) {
-        return [];
-    }
-    return xs.reduce(function(rv, x) {
-        (rv[x[key]] = rv[x[key]] || []).push(x);
-        return rv;
-    }, {});
-};
-
-
-const sumArr = function (arr: Array<any>, key: string) {
-    return arr.reduce(function(total, element) {
-        return total + element[key];
-    }, 0);
-}
-
-export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor }) {
+export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor, squareMeterData }) {
     const [controllerSettings, setControllerSettings] = useState({
         maxColumn:100,
         minLength:100,
@@ -56,10 +40,11 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor 
     for(const item in groupedColumns) {
         data.vertical.push(groupedColumns[item]);
     }
-    const baseX = 10;  // start position for columns
-    const baseY = 10;  // start position for rows
-    const lineSize = 4; // width of the rectangle representing the line
-    const centimeterPixelRatio = 4;
+    const baseX = DEFAULTS.baseX; // 10;  // start position for columns
+    const baseY = DEFAULTS.baseY; //10;  // start position for rows
+    const lineSize = DEFAULTS.lineSize; //4; // width of the rectangle representing the line
+    const centimeterPixelRatio = DEFAULTS.centimeterPixelRatio;
+
 
     const columnSpacingX = Math.floor((height - baseY*2 - (data.vertical.length+1)*lineSize) / (data.vertical.length+1)); // space between columns
     const columnSpacingY = Math.floor((width - baseX*2 - (data.horizontal.length+1)*lineSize) / (data.horizontal.length+1)); // space between columns
@@ -142,6 +127,8 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor 
         }
     }
 
+    const boundaryRect = getItemRectDimensions(items);
+
     function onSelectItem (item) {
         if (item.selected) {
             selectItem({id: null});
@@ -189,6 +176,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor 
             }
         }
     }
+
     function changeMin() {
         const selectedItem = items.find(i=>i.selected);
         if (min.current && selectedItem) {
@@ -228,6 +216,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor 
             changeRange();
         }
     }
+
     function changeMinNumber(e) {
         const selectedItem = items.find(i=>i.selected);
         if (min.current && selectedItem) {
@@ -235,6 +224,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor 
             changeMin();
         }
     }
+
     function changeMaxNumber(e) {
         const selectedItem = items.find(i=>i.selected);
         if (max.current && selectedItem) {
@@ -242,6 +232,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor 
             changeMax();
         }
     }
+
     function changeRowNumber(e) {
         const selectedItem = items.find(i=>i.selected);
         if (row.current && selectedItem) {
@@ -249,7 +240,6 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor 
             changeRow();
         }
     }
-    console.log(controllerSettings);
     return (
         <div ref={svgParent} style={{height: '100%', width: '100%'}}>
             <svg width={width} height={height} style={{height: 'calc(100% - 160px)'}}>
@@ -257,6 +247,11 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor 
                 (<rect key={index} x={item.x} y={item.y} width={item.width} height={item.height}
                        fill={'white'} stroke={item.selected ? 'red' : 'black'} strokeWidth={1} onClick={(e)=>onSelectItem(item)}/>)
             )}
+                <rect x={boundaryRect.x-baseX/2} y={boundaryRect.y-baseY/2}
+                     width={boundaryRect.width + baseX}
+                     height={boundaryRect.height + baseY*2}
+                     stroke="lightgray" strokeWidth={1} fill="none"
+                />
             </svg>
             <div className="controls flex flex-col">
                 <div className="flex flex-row justify-between">Offset <input className="max-w-[100px] border border-gray-300 text-gray-900 text-sm rounded-lg" ref={rangeNumber} type="number" onChange={changeRangeNumber} defaultValue={controllerSettings.column}/></div>

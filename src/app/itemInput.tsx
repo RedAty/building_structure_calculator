@@ -1,4 +1,5 @@
 import React, {useRef, useState} from 'react';
+import {BsPlusCircleFill} from "react-icons/bs";
 
 export const inputTypes = [
     "Dinamikus",
@@ -24,18 +25,12 @@ export const DEFAULTS = {
 
 
 export const tailwindCSS = {
-    label: "block mb-2 text-sm font-medium text-gray-900 dark:text-white",
+    label: "block text-sm font-medium text-gray-900 dark:text-white",
     text: "shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg " +
-        "focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" +
+        "focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600" +
         " dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" +
         " dark:shadow-sm-light",
-    select: "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 " +
-        "focus:border-blue-500 block w-[60px] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 " +
-        "dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500",
-    number: "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 " +
-        "focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 " +
-        "dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 max-w-[100px]"
-
+    select: "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-[60px] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500",
 }
 
 export function ItemInput({ onAddItem, absoluteEditor }) {
@@ -79,7 +74,7 @@ export function ItemInput({ onAddItem, absoluteEditor }) {
     };
 
     return (
-        <div className="flex flex-row">
+        <div className="flex flex-row ml-14 bg-gray-100 object-fill	px-2 pb-2 pl-1 rounded-b-lg max-w-[820px]">
             <div className="flex flex-col ml-2">
                 <label htmlFor="name" className={tailwindCSS.label} >Name</label>
                 <input
@@ -98,7 +93,9 @@ export function ItemInput({ onAddItem, absoluteEditor }) {
 
                 <select id={'types'} defaultValue={type}
                         onChange={(e) => setType(e.target.value)}
-                        className={tailwindCSS.select} >
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                        focus:ring-blue-500 focus:border-blue-500 block w-[90px] dark:bg-gray-700 dark:border-gray-600
+                        dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" >
                     {inputTypes.map(type=>(<option key={type}>{type}</option>))}
                 </select>
             </div>
@@ -107,7 +104,9 @@ export function ItemInput({ onAddItem, absoluteEditor }) {
 
                 <select id="sides" defaultValue={side}
                         onChange={(e) => setSide(e.target.value)}
-                        className={tailwindCSS.select} >
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                        focus:ring-blue-500 focus:border-blue-500 block w-[60px] dark:bg-gray-700 dark:border-gray-600
+                        dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" >
                     {inputSides.map(type=>(<option key={type}>{type}</option>))}
                 </select>
             </div>
@@ -118,7 +117,10 @@ export function ItemInput({ onAddItem, absoluteEditor }) {
 
                     <input id="min" type="number" defaultValue={minLength}
                            onChange={(e) => setMinLength(Number(e.target.value))}
-                           className={tailwindCSS.number} />
+                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                           focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600
+                           dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500
+                           max-w-[100px]" />
                 </div>
             )}
 
@@ -127,7 +129,10 @@ export function ItemInput({ onAddItem, absoluteEditor }) {
 
                 <input id="max" type="number" defaultValue={maxLength}
                        onChange={(e) => handleNumeric2Change(Number(e.target.value))}
-                       className={tailwindCSS.number} />
+                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                       focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600
+                       dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500
+                       max-w-[100px]" />
             </div>
 
             <div className="flex flex-col ml-2">
@@ -135,7 +140,10 @@ export function ItemInput({ onAddItem, absoluteEditor }) {
 
                 <input id="column" type="number" defaultValue={column}
                        onChange={(e) => setColumn(Number(e.target.value))}
-                       className={tailwindCSS.number} />
+                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                       focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600
+                       dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500
+                       max-w-[100px]" />
             </div>
 
             <div className={absoluteEditor ? "flex flex-col ml-2" : "flex flex-col ml-2 hidden"}>
@@ -143,10 +151,15 @@ export function ItemInput({ onAddItem, absoluteEditor }) {
 
                 <input id="row" type="number" defaultValue={row}
                        onChange={(e) => setRow(Number(e.target.value))}
-                       className={tailwindCSS.number} />
+                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                       focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600
+                       dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500
+                       max-w-[100px]" />
             </div>
 
-            <button onClick={handleAdd} className="px-4 py-2 font-semibold text-sm bg-cyan-500 text-white rounded-full shadow-sm h-[38px] mt-7 ml-2">Add</button>
+            <button onClick={handleAdd} className="px-2 py-1 font-semibold text-sm bg-gray-500 text-white rounded-md shadow-sm h-[32px] mt-2 ml-2">
+                <BsPlusCircleFill />
+            </button>
         </div>
     );
 }

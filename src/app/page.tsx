@@ -1,11 +1,12 @@
 'use client';
 import Image from 'next/image'
-import React, {useRef, useState} from "react";
+import React, {useReducer, useRef, useState} from "react";
 import {DEFAULTS, inputSides, inputTypes, ItemInput, tailwindCSS} from "@/app/itemInput";
 import {SVGDesigner} from "@/app/designer";
 import {Commons} from "@/app/lib/commons";
 import {CalculationData, ItemBoundary, ItemType} from "@/app/types/Item";
 import {areaM, getItemBoundariesInCM, toFixedNumber} from "@/app/lib/calculations";
+import {BsCloudDownloadFill, BsCloudUploadFill, BsEraserFill, BsFillTrashFill} from "react-icons/bs";
 
 
 export default function Home() {
@@ -178,16 +179,41 @@ export default function Home() {
     setCalculatedData(Object.assign({}, calculatedData));
   }
 
+  function deleteItem(itemId) {
+    if (itemId && window.confirm('Are you sure you wish to delete this item?')) {
+      setItems(items.filter(i=>i.id !== itemId));
+
+    }
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-4">
-      <div className="z-10 w-full items-center justify-between font-mono text-sm lg:flex">
-        <div className="flex border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl lg:static lg:w-auto dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+    <main className="flex min-h-screen flex-col items-center p-4">
+      <div className="z-10 w-full justify-between font-mono text-sm lg:flex flex-col">
+        <div className="flex border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8
+        backdrop-blur-2xl lg:static lg:w-auto dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit
+        lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
           <div className="flex h-[30px]">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-900 dark:text-white w-[50px] p-1">Name:</label>
+            <a
+                className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
+                href="https://reterics.com"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+              <Image
+                  src="/logo.png"
+                  alt="Reterics Logo"
+                  className="dark:invert"
+                  width={40}
+                  height={42}
+                  priority
+              />
+            </a>
+
+            <label htmlFor="name" className="block text-sm font-medium text-gray-900 dark:text-white w-[64px] p-1">Project:</label>
 
             <input type="name" id="name"
                    defaultValue={name}
-                   className="mr-8 max-w-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                   className="mr-8 max-w-[180px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    placeholder="Project Name" onChange={changeName} />
 
             <input type="m21" id="m21"
@@ -198,15 +224,17 @@ export default function Home() {
             <div className="inline-flex rounded-md shadow-sm h-[30px]" role="group">
               <button onClick={()=>reset()} type="button"
                       className="px-2 text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-blue-500 dark:focus:text-white">
-                Reset
+                <BsEraserFill />
               </button>
               <button onClick={()=>importData()} type="button"
                       className="px-2 text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-blue-500 dark:focus:text-white">
-                Import
+
+                <BsCloudUploadFill />
               </button>
               <button onClick={()=>exportData()} type="button"
                       className="px-2 text-gray-900 bg-white border border-gray-200 rounded-r-md hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-blue-500 dark:focus:text-white">
-                Export
+
+                <BsCloudDownloadFill />
               </button>
             </div>
 
@@ -247,32 +275,14 @@ export default function Home() {
 
 
         </div>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/logo.png"
-              alt="Reterics Logo"
-              className="dark:invert"
-              width={64}
-              height={68}
-              priority
-            />
-          </a>
-        </div>
+        <ItemInput onAddItem={addItemToList} absoluteEditor={absoluteEditor} />
       </div>
 
-
-        <div className="overflow-x-auto w-full  h-[76vh]">
+      <div className="overflow-x-auto w-full  h-[76vh]">
             <div className="float-left w-[730px]">
               <div className="overflow-x-auto inline-block" style={{maxHeight:'76vh'}}>
-                <table className="min-w-full text-left text-sm font-light max-w-[730px]">
-                  <thead className="border-b font-medium dark:border-neutral-500">
+                <table className="text-left mt-2 text-sm font-light max-w-[730px] min-w-[710px] text-gray-500 dark:text-gray-400">
+                  <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
                   <tr>
                     <th scope="col" className="px-3 py-2 hidden">#</th>
                     <th scope="col" className="px-3 py-2">Name</th>
@@ -283,15 +293,16 @@ export default function Home() {
                     <th scope="col" className="px-3 py-2">Min</th>
                     <th scope="col" className="px-3 py-2">Max</th>
                     <th scope="col" className="px-3 py-2">Calculated</th>
+                    <th scope="col" className="px-3 py-2" />
 
                   </tr>
                   </thead>
                   <tbody>
                   {items.map((item, index) => (
-                      <tr key={index} className={item.selected? "bg-sky-500/50"
-                          : "border-b dark:border-neutral-500"} onClick={() => selectItem(item)}>
-                        <td className="whitespace-nowrap px-3 py-2 font-medium hidden">{index}</td>
-                        <td className="whitespace-nowrap px-3 py-2">{item.name}</td>
+                      <tr key={index} className={item.selected ? "bg-sky-500/50"
+                          : (index % 2 ? "bg-white" : "")  + " border-b bg-gray-50 dark:bg-gray-800 dark:border-gray-700"}>
+                        <td className="whitespace-nowrap px-3 py-2 font-medium hidden" onClick={() => selectItem(item)}>{index}</td>
+                        <td className="whitespace-nowrap px-3 py-2" onClick={() => selectItem(item)}>{item.name}</td>
                         <td className="whitespace-nowrap px-3 py-2">{
                           item.selected ?
                               <select defaultValue={item.type}
@@ -314,13 +325,15 @@ export default function Home() {
                               </select>
                               : item.side
                         }</td>
-                        <td className="whitespace-nowrap px-3 py-2">{item.column}</td>
-                        <td className="whitespace-nowrap px-3 py-2">{item.row}</td>
-                        <td className="whitespace-nowrap px-3 py-2 min-w-[98px]">{item.minLength} cm</td>
-                        <td className="whitespace-nowrap px-3 py-2 min-w-[98px]">{item.type !== inputTypes[1] ?
+                        <td className="whitespace-nowrap px-3 py-2" onClick={() => selectItem(item)}>{item.column}</td>
+                        <td className="whitespace-nowrap px-3 py-2" onClick={() => selectItem(item)}>{item.row}</td>
+                        <td className="whitespace-nowrap px-3 py-2 min-w-[98px]" onClick={() => selectItem(item)}>{item.minLength} cm</td>
+                        <td className="whitespace-nowrap px-3 py-2 min-w-[98px]" onClick={() => selectItem(item)}>{item.type !== inputTypes[1] ?
                             item.maxLength + 'cm' :'-'} </td>
                         <td className="whitespace-nowrap px-3 py-2 min-w-[98px]">{item.calculated || '-'} cm</td>
-
+                        <td className="whitespace-nowrap px-3 py-2">
+                            <BsFillTrashFill className="cursor-pointer" onClick={(e)=>deleteItem(item.id)}/>
+                        </td>
                       </tr>
                   ))}
                   </tbody>
@@ -334,10 +347,6 @@ export default function Home() {
           </div>
 
         </div>
-
-        <ItemInput onAddItem={addItemToList} absoluteEditor={absoluteEditor} />
-
-      <div></div>
     </main>
   )
 }

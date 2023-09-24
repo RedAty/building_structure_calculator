@@ -6,12 +6,20 @@ import {SVGDesigner} from "@/app/designer";
 import {Commons} from "@/app/lib/commons";
 import {CalculationData, ItemBoundary, ItemType} from "@/app/types/Item";
 import {areaM, getItemBoundariesInCM, toFixedNumber} from "@/app/lib/calculations";
-import {BsCloudDownloadFill, BsCloudUploadFill, BsEraserFill, BsFillTrashFill} from "react-icons/bs";
+import {
+  BsCloudDownloadFill,
+  BsCloudUploadFill,
+  BsEraserFill,
+  BsFillCaretLeftFill, BsFillCaretRightFill, BsFillGrid1X2Fill, BsFillImageFill,
+  BsFillTrashFill, BsLayoutTextWindowReverse
+} from "react-icons/bs";
+import {GUIType} from "@/app/types/gui";
 
 
 export default function Home() {
   const [items, setItems] = useState([] as ItemType[]);
   const [name, setName] = useState('');
+  const [ui, setUI] = useState({focus: "normal"} as GUIType);
   const [absoluteEditor, setAbsoluteEditor] = useState(DEFAULTS.absoluteEditor);
   let itemBoundaries = getItemBoundariesInCM(items);
   const [squareMeter, setSquareMeter] = useState(areaM(itemBoundaries.x0, itemBoundaries.y0, itemBoundaries.x1,  itemBoundaries.y1))
@@ -186,6 +194,21 @@ export default function Home() {
     }
   }
 
+  function switchUI() {
+    switch (ui.focus) {
+      case "normal":
+        ui.focus = "table";
+        break;
+      case "table":
+        ui.focus = "designer";
+        break;
+      case "designer":
+        ui.focus = "normal";
+        break;
+    }
+    setUI(Object.assign({}, ui));
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center p-4">
       <div className="z-10 w-full justify-between font-mono text-sm lg:flex flex-col">
@@ -209,7 +232,6 @@ export default function Home() {
               />
             </a>
 
-            <label htmlFor="name" className="block text-sm font-medium text-gray-900 dark:text-white w-[64px] p-1">Project:</label>
 
             <input type="name" id="name"
                    defaultValue={name}
@@ -232,9 +254,14 @@ export default function Home() {
                 <BsCloudUploadFill />
               </button>
               <button onClick={()=>exportData()} type="button"
-                      className="px-2 text-gray-900 bg-white border border-gray-200 rounded-r-md hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-blue-500 dark:focus:text-white">
+                      className="px-2 text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-blue-500 dark:focus:text-white">
 
                 <BsCloudDownloadFill />
+              </button>
+              <button onClick={()=>switchUI()} type="button"
+                      className="px-2 text-gray-900 bg-white border border-gray-200 rounded-r-md hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-blue-500 dark:focus:text-white">
+
+                {ui.focus === "normal" ? (<BsFillGrid1X2Fill />) : ui.focus === "designer" ? (<BsFillImageFill />) : (<BsLayoutTextWindowReverse />)}
               </button>
             </div>
 
@@ -279,9 +306,17 @@ export default function Home() {
       </div>
 
       <div className="overflow-x-auto w-full  h-[76vh]">
-            <div className="float-left w-[730px]">
+            <div className={
+              "float-left " + (
+                    ui.focus === 'normal' ? 'w-[730px]' : ui.focus === 'designer' ? 'hidden' : 'w-full'
+                )
+            }>
               <div className="overflow-x-auto inline-block" style={{maxHeight:'76vh'}}>
-                <table className="text-left mt-2 text-sm font-light max-w-[730px] min-w-[710px] text-gray-500 dark:text-gray-400">
+                <table className={
+                  "text-left mt-2 text-sm font-light text-gray-500 dark:text-gray-400 " + (
+                        ui.focus === 'normal' ? 'w-[730px]' : ui.focus === 'designer' ? 'hidden' : 'w-[calc(100vw-2rem)]'
+                    )
+                }>
                   <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
                   <tr>
                     <th scope="col" className="px-3 py-2 hidden">#</th>
@@ -341,7 +376,7 @@ export default function Home() {
 
               </div>
             </div>
-          <div className="overflow-x-auto float-left h-full" style={{width:'calc(100% - 730px)'}}>
+          <div className="overflow-x-auto float-left h-full" style={{width:ui.focus === 'normal' ? 'calc(100% - 730px)' : ui.focus === 'designer' ? '100%' : '0%'}}>
             <SVGDesigner items={items} selectItem={selectItem} updateItemById={updateItemById}
                          absoluteEditor={absoluteEditor} calculatedData={calculatedData} isCalculatedOn={calculatedData.isOn}/>
           </div>

@@ -1,12 +1,16 @@
 {
   "name": "building_structure_calculator",
   "version": "0.1.0",
+  "author": "Attila Reterics",
+  "license": "MIT",
   "private": true,
+  "main": "main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "electron": "electron ."
   },
   "dependencies": {
     "@types/node": "20.6.2",
@@ -22,5 +26,8 @@
     "tailwindcss": "3.3.3",
     "typescript": "5.2.2",
     "react-icons": "latest"
+  },
+  "devDependencies": {
+    "electron": "latest"
   }
 }

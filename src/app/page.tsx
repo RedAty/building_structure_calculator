@@ -269,20 +269,20 @@ export default function Home() {
 
 
         <div className="overflow-x-auto w-full  h-[76vh]">
-            <div className="float-left w-[790px]">
+            <div className="float-left w-[730px]">
               <div className="overflow-x-auto inline-block" style={{maxHeight:'76vh'}}>
-                <table className="min-w-full text-left text-sm font-light max-w-[790px]">
+                <table className="min-w-full text-left text-sm font-light max-w-[730px]">
                   <thead className="border-b font-medium dark:border-neutral-500">
                   <tr>
-                    <th scope="col" className="px-6 py-4 hidden">#</th>
-                    <th scope="col" className="px-6 py-4">Name</th>
-                    <th scope="col" className="px-6 py-4">Type</th>
-                    <th scope="col" className="px-6 py-4">Side</th>
-                    <th scope="col" className="px-6 py-4">Offset 1</th>
-                    <th scope="col" className={absoluteEditor ? "px-6 py-4" : "px-6 py-4 hidden"}>Offset 2</th>
-                    <th scope="col" className="px-6 py-4">Min</th>
-                    <th scope="col" className="px-6 py-4">Max</th>
-                    <th scope="col" className="px-6 py-4">Calculated</th>
+                    <th scope="col" className="px-3 py-2 hidden">#</th>
+                    <th scope="col" className="px-3 py-2">Name</th>
+                    <th scope="col" className="px-3 py-2">Type</th>
+                    <th scope="col" className="px-3 py-2">Side</th>
+                    <th scope="col" className="px-3 py-2">Offset 1</th>
+                    <th scope="col" className={absoluteEditor ? "px-3 py-2" : "px-3 py-2 hidden"}>Offset 2</th>
+                    <th scope="col" className="px-3 py-2">Min</th>
+                    <th scope="col" className="px-3 py-2">Max</th>
+                    <th scope="col" className="px-3 py-2">Calculated</th>
 
                   </tr>
                   </thead>
@@ -290,9 +290,9 @@ export default function Home() {
                   {items.map((item, index) => (
                       <tr key={index} className={item.selected? "bg-sky-500/50"
                           : "border-b dark:border-neutral-500"} onClick={() => selectItem(item)}>
-                        <td className="whitespace-nowrap px-6 py-4 font-medium hidden">{index}</td>
-                        <td className="whitespace-nowrap px-6 py-4">{item.name}</td>
-                        <td className="whitespace-nowrap px-6 py-4">{
+                        <td className="whitespace-nowrap px-3 py-2 font-medium hidden">{index}</td>
+                        <td className="whitespace-nowrap px-3 py-2">{item.name}</td>
+                        <td className="whitespace-nowrap px-3 py-2">{
                           item.selected ?
                               <select defaultValue={item.type}
                                       onChange={(e) => updateItemById(item.id, {
@@ -303,7 +303,7 @@ export default function Home() {
                               </select>
                               : item.type.substring(0,3)
                         }</td>
-                        <td className="whitespace-nowrap px-6 py-4">{
+                        <td className="whitespace-nowrap px-3 py-2">{
                           item.selected ?
                               <select defaultValue={item.side}
                                       onChange={(e) => updateItemById(item.id, {
@@ -314,12 +314,12 @@ export default function Home() {
                               </select>
                               : item.side
                         }</td>
-                        <td className="whitespace-nowrap px-6 py-4">{item.column}</td>
-                        <td className="whitespace-nowrap px-6 py-4">{item.row}</td>
-                        <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.minLength} cm</td>
-                        <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.type !== inputTypes[1] ?
+                        <td className="whitespace-nowrap px-3 py-2">{item.column}</td>
+                        <td className="whitespace-nowrap px-3 py-2">{item.row}</td>
+                        <td className="whitespace-nowrap px-3 py-2 min-w-[98px]">{item.minLength} cm</td>
+                        <td className="whitespace-nowrap px-3 py-2 min-w-[98px]">{item.type !== inputTypes[1] ?
                             item.maxLength + 'cm' :'-'} </td>
-                        <td className="whitespace-nowrap px-6 py-4 min-w-[98px]">{item.calculated || '-'} cm</td>
+                        <td className="whitespace-nowrap px-3 py-2 min-w-[98px]">{item.calculated || '-'} cm</td>
 
                       </tr>
                   ))}
@@ -328,7 +328,7 @@ export default function Home() {
 
               </div>
             </div>
-          <div className="overflow-x-auto float-left h-full" style={{width:'calc(100% - 790px)'}}>
+          <div className="overflow-x-auto float-left h-full" style={{width:'calc(100% - 730px)'}}>
             <SVGDesigner items={items} selectItem={selectItem} updateItemById={updateItemById}
                          absoluteEditor={absoluteEditor} calculatedData={calculatedData} isCalculatedOn={calculatedData.isOn}/>
           </div>

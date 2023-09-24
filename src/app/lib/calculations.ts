@@ -168,15 +168,15 @@ export const areaM = (x1: number, y1: number, x2: number, y2: number): Number =>
     return Number((area / 10000).toFixed(2));
 }
 
-export const convertToCoordinate = (data: number) => {
+export const convertToCoordinate = (data: number, centimeterPixelRatio = DEFAULTS.centimeterPixelRatio) => {
     const base = DEFAULTS.baseX || 10;
-    return Math.round((data / DEFAULTS.centimeterPixelRatio) + base - DEFAULTS.lineSize / 2);
+    return Math.round((data / centimeterPixelRatio) + base - DEFAULTS.lineSize / 2);
 }
 
-export const convertFromCoordinate = (data: number) => {
+export const convertFromCoordinate = (data: number, centimeterPixelRatio = DEFAULTS.centimeterPixelRatio) => {
     const base = DEFAULTS.baseX || 10;
 
-    return Math.round(((data + DEFAULTS.lineSize / 2) - base) * DEFAULTS.centimeterPixelRatio);
+    return Math.round(((data + DEFAULTS.lineSize / 2) - base) * centimeterPixelRatio);
 }
 
 export const toFixedNumber = (num: number) => {

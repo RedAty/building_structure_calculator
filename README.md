@@ -1,6 +1,6 @@
 # Building Structure Calculator
 
-![Another Try](./public/screenshot3.png)
+![Building Structure Calculator](./public/screenshot4.png)
 
 This application also incorporates the design of the base plan of walls and performs the necessary calculations related to it. 
 The project uses [Next.js](https://nextjs.org/) with [Typescript](https://www.typescriptlang.org/).

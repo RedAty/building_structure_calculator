@@ -8,10 +8,19 @@ import {
     sumArr
 } from "@/app/lib/calculations";
 import {ItemType} from "@/app/types/Item";
+import {
+    BsDashSquare,
+    BsFillArrowDownSquareFill,
+    BsFillArrowLeftSquareFill, BsFillArrowRightSquareFill, BsFillArrowUpSquareFill,
+    BsPlusSquare,
+    BsXSquare, BsZoomIn, BsZoomOut
+} from "react-icons/bs";
 
 var selectedElement, offset, dragStarted, timeout;
 
-export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor, calculatedData, isCalculatedOn }) {
+
+export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor, calculatedData, isCalculatedOn,
+                                deleteItem }) {
     const [controllerSettings, setControllerSettings] = useState({
         maxColumn:100,
         minLength:100,
@@ -21,11 +30,12 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
         max: 0,
         row: 0,
         maxRow: 100
-    })
+    });
     const svgParent = useRef(null);
     const svg = useRef(null);
     const [width, setWidth] = useState(400);
     const [height, setHeight] = useState(540);
+    const [centimeterPixelRatio, setCentimeterPixelRatio] = useState(DEFAULTS.centimeterPixelRatio);
 
     const range = useRef(null);
     const rangeNumber = useRef(null);
@@ -57,7 +67,6 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
     const baseX = DEFAULTS.baseX; // 10;  // start position for columns
     const baseY = DEFAULTS.baseY; //10;  // start position for rows
     const lineSize = DEFAULTS.lineSize; //4; // width of the rectangle representing the line
-    const centimeterPixelRatio = DEFAULTS.centimeterPixelRatio;
 
 
     const columnSpacingX = Math.floor((height - baseY*2 - (data.vertical.length+1)*lineSize) / (data.vertical.length+1)); // space between columns
@@ -82,9 +91,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
             refreshController();
         }
         if (svgParent && svgParent.current && typeof svgParent.current.getBoundingClientRect === 'function') {
-            const boundingClient = svgParent.current?.parentNode.getBoundingClientRect();
-            setWidth(boundingClient.width);
-            setHeight(boundingClient.height - 160);
+            const boundingClient = svgParent.current?.getBoundingClientRect();
+            setWidth(boundingClient.width - 10);
+            setHeight(boundingClient.height - 10);
         }
     }, []);
 
@@ -96,11 +105,11 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
             let currentX = baseX;
             for (let item of row) {
                 if (absoluteEditor) {
-                    item.x = convertToCoordinate(item[keys.row]);
-                    item.y = convertToCoordinate(item[keys.column]);
+                    item.x = convertToCoordinate(item[keys.row], centimeterPixelRatio);
+                    item.y = convertToCoordinate(item[keys.column], centimeterPixelRatio);
                 } else {
                     item.x = currentX;
-                    item.y = convertToCoordinate(item[keys.column]);
+                    item.y = convertToCoordinate(item[keys.column], centimeterPixelRatio);
                 }
 
                 item.width =  (item[keys.minLength] / centimeterPixelRatio);
@@ -121,10 +130,10 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
             let currentY = baseY; // start vertical lines below the horizontal ones
             for (let item of column) {
                 if (absoluteEditor) {
-                    item.x = convertToCoordinate(item[keys.column]);
-                    item.y = convertToCoordinate(item[keys.row]);
+                    item.x = convertToCoordinate(item[keys.column], centimeterPixelRatio);
+                    item.y = convertToCoordinate(item[keys.row], centimeterPixelRatio);
                 } else {
-                    item.x = convertToCoordinate(item[keys.column]);
+                    item.x = convertToCoordinate(item[keys.column], centimeterPixelRatio);
                     item.y = currentY
                 }
 
@@ -198,11 +207,11 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
                 item.x = x;
                 item.y = y;
                 if (item.side === inputSides[0]) { // Horizontal
-                    item.row = convertFromCoordinate(item.x);
-                    item.column = convertFromCoordinate(item.y);
+                    item.row = convertFromCoordinate(item.x, centimeterPixelRatio);
+                    item.column = convertFromCoordinate(item.y, centimeterPixelRatio);
                 } else if (item.side === inputSides[1]) { // Vertical
-                    item.column = convertFromCoordinate(item.x);
-                    item.row = convertFromCoordinate(item.y);
+                    item.column = convertFromCoordinate(item.x, centimeterPixelRatio);
+                    item.row = convertFromCoordinate(item.y, centimeterPixelRatio);
                 }
                 updateItemById(item.id, {
                     x: x,
@@ -367,18 +376,138 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
                     minLength: selectedItem.minLength + DEFAULTS.zoomStep
                 })
             }
+        } else {
+            // If no item selected we modify SVG Zooming
+            if (event.deltaY > 0) {
+                // Scrolling down
+                setCentimeterPixelRatio(centimeterPixelRatio-1);
+            } else if (event.deltaY < 0) {
+                // Scrolling up
+                setCentimeterPixelRatio(centimeterPixelRatio+1);
+            }
         }
+    }
 
+    function deselectOnBackground(e) {
+        if (e.target.tagName.toUpperCase() === 'SVG') {
+            const selectedItem = items.find(i=>i.selected);
+            if (selectedItem) {
+                selectItem({id: null});
+            }
+        }
+    }
+
+    function deleteSelected() {
+        const selectedItem = items.find(i=>i.selected);
+        if (selectedItem) {
+            deleteItem(selectedItem.id);
+        }
+    }
+
+    function moveSelected(type: string) {
+        const item = items.find(i=>i.selected);
+        if (item) {
+            switch (type) {
+                case 'up':
+                    if (item.side === inputSides[0]) { // Horizontal
+                        item.column -= centimeterPixelRatio;
+                    } else if (item.side === inputSides[1]) { // Vertical
+                        item.row -= centimeterPixelRatio
+                    }
+                    updateItemById(item.id, {
+                        column: item.column,
+                        row: item.row
+                    });
+                    break;
+                case 'down':
+                    if (item.side === inputSides[0]) { // Horizontal
+                        item.column += centimeterPixelRatio;
+                    } else if (item.side === inputSides[1]) { // Vertical
+                        item.row += centimeterPixelRatio
+                    }
+                    updateItemById(item.id, {
+                        column: item.column,
+                        row: item.row
+                    });
+                    break;
+                case 'left':
+                    if (item.side === inputSides[0]) { // Horizontal
+                        item.row -= centimeterPixelRatio;
+                    } else if (item.side === inputSides[1]) { // Vertical
+                        item.column -= centimeterPixelRatio
+                    }
+                    updateItemById(item.id, {
+                        column: item.column,
+                        row: item.row
+                    });
+                    break;
+                case 'right':
+                    if (item.side === inputSides[0]) { // Horizontal
+                        item.row += centimeterPixelRatio;
+                    } else if (item.side === inputSides[1]) { // Vertical
+                        item.column += centimeterPixelRatio
+                    }
+                    updateItemById(item.id, {
+                        column: item.column,
+                        row: item.row
+                    });
+                    break;
+            }
+        }
     }
 
     return (
-        <div ref={svgParent} style={{height: '100%', width: '100%'}}>
-            <svg ref={svg} width={width} height={height} style={{height: 'calc(100% - 160px)'}}
+        <div ref={svgParent} className="ml-2 mt-2 h-full w-full ">
+            <div className="absolute flex flex-col right-0 mr-4 pr-1 pt-1 items-center">
+                <button className={selected ? "mb-2 text-lg" : "mb-2 text-lg text-gray-200"}
+                        onClick={()=>deleteSelected()}>
+                    <BsXSquare />
+                </button>
+
+                <button className="mb-1 text-lg"
+                        onClick={()=>setCentimeterPixelRatio(centimeterPixelRatio-1)}>
+                    <BsZoomIn />
+                </button>
+                <button className="mb-1 text-lg"
+                        onClick={()=>setCentimeterPixelRatio(centimeterPixelRatio+1)}>
+                    <BsZoomOut />
+                </button>
+
+                <button className={selected ? "mb-1 text-lg mt-2" : "mb-1 text-lg mt-2 text-gray-200"}
+                        onClick={()=>selected && scaleItem({deltaY: -1})}>
+                    <BsPlusSquare />
+                </button>
+                <button className={selected ? "mb-1 text-lg" : "mb-1 text-lg text-gray-200"}
+                        onClick={()=>selected && scaleItem({deltaY: 1})}>
+                    <BsDashSquare />
+                </button>
+                <button className={selected ? "mb-1 text-lg" : "mb-1 text-lg text-gray-200"}
+                        onClick={()=>moveSelected('up')}>
+                    <BsFillArrowUpSquareFill />
+                </button>
+                <div className="button-group flex-row">
+                    <button className={selected ? "mb-1 text-lg mr-0.5" : "mb-1 text-lg mr-0.5 text-gray-200"}
+                            onClick={()=>moveSelected('left')}>
+                        <BsFillArrowLeftSquareFill />
+                    </button>
+                    <button className={selected ? "mb-1 text-lg mr-0.5" : "mb-1 text-lg mr-0.5 text-gray-200"}
+                            onClick={()=>moveSelected('down')}>
+                        <BsFillArrowDownSquareFill />
+                    </button>
+                    <button className={selected ? "mb-1 text-lg" : "mb-1 text-lg text-gray-200"}
+                            onClick={()=>moveSelected('right')}>
+                        <BsFillArrowRightSquareFill />
+                    </button>
+                </div>
+            </div>
+            <svg ref={svg} width={width} height={height} className="h-full bg-gray-50 w-full" style={{/*height: 'calc(100% - 160px)'*/}}
             onMouseDown={startDrag}
             onMouseMove={drag}
             onMouseUp={endDrag}
             onMouseLeave={endDrag}
-            onWheel={scaleItem}>
+            onWheel={scaleItem}
+            onClick={deselectOnBackground}
+            >
                 <g transform={'translate(19,19)'}>
                     {svgData.map((item, index)=>
                         (<rect id={item.id} className="draggable" key={index} x={item.x} y={item.y} width={item.width} height={item.height}
@@ -422,7 +551,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
                 </g>
 
             </svg>
-            <div className={isCalculatedOn ? "hidden" : "controls flex flex-col"}>
+            <div className={isCalculatedOn ? "hidden" : "controls flex flex-col"} style={{display: 'none'}}>
                 <div className="flex flex-row justify-between">Offset <input className="max-w-[100px] border border-gray-300 text-gray-900 text-sm rounded-lg" ref={rangeNumber} type="number" onChange={changeRangeNumber} defaultValue={controllerSettings.column}/></div>
                 <input ref={range} type="range" onChange={changeRange} min={0} max={controllerSettings.maxColumn}
             defaultValue={controllerSettings.column}/>

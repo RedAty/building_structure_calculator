@@ -15,7 +15,6 @@ export const DEFAULTS = {
     max: 50,
     column: 0,
     row: 0,
-    absoluteEditor: true,
     centimeterPixelRatio: 4,
     lineSize: 4,
     baseX: 10,
@@ -33,7 +32,7 @@ export const tailwindCSS = {
     select: "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-[60px] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500",
 }
 
-export function ItemInput({ onAddItem, absoluteEditor }) {
+export function ItemInput({ onAddItem }) {
     const [name, setName] = useState(new Date().getTime().toString().substring(6));
     const [type, setType] = useState(inputTypes[0]);
     const [side, setSide] = useState(inputSides[1]);
@@ -146,7 +145,7 @@ export function ItemInput({ onAddItem, absoluteEditor }) {
                        max-w-[100px]" />
             </div>
 
-            <div className={absoluteEditor ? "flex flex-col ml-2" : "flex flex-col ml-2 hidden"}>
+            <div className="flex flex-col ml-2">
                 <label htmlFor="row" className={tailwindCSS.label}>Offset 2</label>
 
                 <input id="row" type="number" defaultValue={row}

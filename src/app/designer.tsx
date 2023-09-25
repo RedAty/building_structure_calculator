@@ -19,7 +19,7 @@ import {
 var selectedElement, offset, dragStarted, timeout;
 
 
-export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor, calculatedData, isCalculatedOn,
+export function SVGDesigner({ items, updateItemById, selectItem, calculatedData, isCalculatedOn,
                                 deleteItem }) {
     const [controllerSettings, setControllerSettings] = useState({
         maxColumn:100,
@@ -104,13 +104,8 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
         for (let row of data.horizontal) {
             let currentX = baseX;
             for (let item of row) {
-                if (absoluteEditor) {
-                    item.x = convertToCoordinate(item[keys.row], centimeterPixelRatio);
-                    item.y = convertToCoordinate(item[keys.column], centimeterPixelRatio);
-                } else {
-                    item.x = currentX;
-                    item.y = convertToCoordinate(item[keys.column], centimeterPixelRatio);
-                }
+                item.x = convertToCoordinate(item[keys.row], centimeterPixelRatio);
+                item.y = convertToCoordinate(item[keys.column], centimeterPixelRatio);
 
                 item.width =  (item[keys.minLength] / centimeterPixelRatio);
                 item.height = lineSize;
@@ -129,13 +124,8 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
         for (let column of data.vertical) {
             let currentY = baseY; // start vertical lines below the horizontal ones
             for (let item of column) {
-                if (absoluteEditor) {
-                    item.x = convertToCoordinate(item[keys.column], centimeterPixelRatio);
-                    item.y = convertToCoordinate(item[keys.row], centimeterPixelRatio);
-                } else {
-                    item.x = convertToCoordinate(item[keys.column], centimeterPixelRatio);
-                    item.y = currentY
-                }
+                item.x = convertToCoordinate(item[keys.column], centimeterPixelRatio);
+                item.y = convertToCoordinate(item[keys.row], centimeterPixelRatio);
 
                 item.width = lineSize;
                 item.height = (item[keys.minLength] / centimeterPixelRatio);
@@ -557,9 +547,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, absoluteEditor,
             defaultValue={controllerSettings.column}/>
 
 
-                <div className={absoluteEditor ? 'flex flex-row justify-between' : 'hidden'}>Offset 2
+                <div className="flex flex-row justify-between">Offset 2
                     <input className="max-w-[100px] border border-gray-300 text-gray-900 text-sm rounded-lg" ref={rowNumber} type="number" onChange={changeRowNumber} defaultValue={controllerSettings.row}/></div>
-                <input className={absoluteEditor ? '' : 'hidden'} ref={row} type="range" onChange={changeRow} min={0} max={controllerSettings.maxRow}
+                <input ref={row} type="range" onChange={changeRow} min={0} max={controllerSettings.maxRow}
                        defaultValue={controllerSettings.row}/>
 
                 <div className="flex flex-row justify-between">Min <input className="max-w-[100px] border border-gray-300 text-gray-900 text-sm rounded-lg" ref={minNumber} type="number" onChange={changeMinNumber} defaultValue={controllerSettings.min}/></div>

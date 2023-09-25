@@ -1,10 +1,10 @@
 'use client';
 import Image from 'next/image'
-import React, {useReducer, useRef, useState} from "react";
-import {DEFAULTS, inputSides, inputTypes, ItemInput, tailwindCSS} from "@/app/itemInput";
+import React, {useRef, useState} from "react";
+import {inputSides, inputTypes, ItemInput, tailwindCSS} from "@/app/itemInput";
 import {SVGDesigner} from "@/app/designer";
 import {Commons} from "@/app/lib/commons";
-import {CalculationData, ItemBoundary, ItemType} from "@/app/types/Item";
+import {CalculationData, ItemType} from "@/app/types/Item";
 import {areaM, getItemBoundariesInCM, toFixedNumber} from "@/app/lib/calculations";
 import {
   BsCloudDownloadFill,
@@ -23,7 +23,6 @@ export default function Home() {
 
   const maxLengthInput = useRef(null);
 
-  const [absoluteEditor, setAbsoluteEditor] = useState(DEFAULTS.absoluteEditor);
   let itemBoundaries = getItemBoundariesInCM(items);
   const [squareMeter, setSquareMeter] = useState(areaM(itemBoundaries.x0, itemBoundaries.y0, itemBoundaries.x1,  itemBoundaries.y1))
   const [calculatedData, setCalculatedData] = useState({
@@ -73,10 +72,6 @@ export default function Home() {
     });
     setItems([...items]);
   }
-
-  const handleChange = () => {
-    setAbsoluteEditor(!absoluteEditor)
-  };
 
   const exportData = () => {
     Commons.downloadAsFile(name, JSON.stringify(items), 'application/json');
@@ -295,20 +290,8 @@ export default function Home() {
 
 
         </div>
-        <div className="block hidden">
 
-
-          <div className="relative inline-flex items-center cursor-pointer" onClick={handleChange}>
-            <input type="checkbox" value="" className="sr-only peer"
-                   defaultChecked={absoluteEditor}/>
-            <div
-                className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"/>
-            <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Absolute Editor</span>
-          </div>
-
-
-        </div>
-        <ItemInput onAddItem={addItemToList} absoluteEditor={absoluteEditor} />
+        <ItemInput onAddItem={addItemToList} />
       </div>
 
       <div className="overflow-x-auto w-full  h-[76vh]">
@@ -330,7 +313,7 @@ export default function Home() {
                     <th scope="col" className="px-3 py-2">Type</th>
                     <th scope="col" className="px-3 py-2">Side</th>
                     <th scope="col" className="px-3 py-2 min-w-[80px]">Offset 1</th>
-                    <th scope="col" className={absoluteEditor ? "px-3 py-2 min-w-[81px]" : "px-3 py-2 hidden"}>Offset 2</th>
+                    <th scope="col" className="px-3 py-2 min-w-[81px]">Offset 2</th>
                     <th scope="col" className="px-2 py-2">Min (cm)</th>
                     <th scope="col" className="px-3 py-2">Max (cm)</th>
                     <th scope="col" className="px-3 py-2">Calculated</th>
@@ -435,7 +418,7 @@ export default function Home() {
         {ui.focus !== 'table' &&
           <div className="overflow-y-hidden overflow-x-hidden float-left h-full" style={{width:ui.focus === 'normal' ? 'calc(100% - 730px)' : ui.focus === 'designer' ? '100%' : '0%'}}>
             <SVGDesigner items={items} selectItem={selectItem} updateItemById={updateItemById}
-                         absoluteEditor={absoluteEditor} calculatedData={calculatedData}
+                         calculatedData={calculatedData}
                          isCalculatedOn={calculatedData.isOn}
                          deleteItem={deleteItem} />
           </div>

@@ -1,7 +1,5 @@
-import {ItemBoundary, ItemType, RectBoundary} from "@/app/types/Item";
-import {DEFAULTS, inputSides} from "@/app/itemInput";
-import exp from "node:constants";
-import {base} from "next/dist/build/webpack/config/blocks/base";
+import {CalculationData, ItemBoundary, ItemType, RectBoundary, TypeKeys} from "@/app/types/Item";
+import {DEFAULTS, inputSides, inputTypes} from "@/app/itemInput";
 
 export const getItemBoundariesInCM = (items: ItemType[], key : 'calculated'|'minLength'|'maxLength' = 'minLength',
                                       column = 'column', row = 'row'): ItemBoundary => {
@@ -115,7 +113,7 @@ export const getItemRectDimensions = (items: ItemType[]): RectBoundary => {
     }
 }
 
-export const groupBy = function(xs: Array<any>, key: string) {
+export const groupBy = (xs: Array<any>, key: string) => {
     if (!xs || !Array.isArray(xs)) {
         return [];
     }
@@ -125,13 +123,11 @@ export const groupBy = function(xs: Array<any>, key: string) {
     }, {});
 };
 
-
-export const sumArr = function (arr: Array<any>, key: string) {
+export const sumArr = (arr: Array<any>, key: string) => {
     return arr.reduce(function(total, element) {
         return total + element[key];
     }, 0);
 }
-
 
 export const getTextAttributesForRect = (x: number, y: number, width: number, height: number, fontSize = 20) => {
     return {
@@ -181,4 +177,66 @@ export const convertFromCoordinate = (data: number, centimeterPixelRatio = DEFAU
 
 export const toFixedNumber = (num: number) => {
     return Number(num.toFixed(2));
+}
+
+export const increaseRunningRatio = (arr: ItemType[], calculatedData: CalculationData, keys: TypeKeys) => {
+    const horizontal = arr.filter(item=>item.side === inputSides[0]);
+    const vertical = arr.filter(item=>item.side === inputSides[1]);
+
+    const currentTotalWidth = horizontal.reduce((acc, obj) => acc + obj[keys.minLength], 0);
+    const currentTotalHeight = vertical.reduce((acc, obj) => acc + obj[keys.minLength], 0);
+
+    const totalHorizontalGaps = horizontal.slice(0, -1).reduce((acc, obj, index) => {
+        return acc + (arr[index + 1][keys.row] - (obj[keys.row] + obj[keys.minLength]));
+    }, 0);
+    const totalVerticalGaps = vertical.slice(0, -1).reduce((acc, obj, index) => {
+        return acc + (arr[index + 1][keys.column] - (obj[keys.column] + obj[keys.minLength]));
+    }, 0);
+
+    const fixedWidthsTotal = horizontal
+        .reduce((acc, obj) => obj.type === inputTypes[1] ? acc + obj[keys.minLength] : acc, 0);
+    const fixedHeightsTotal = vertical
+        .reduce((acc, obj) => obj.type === inputTypes[1] ? acc + obj[keys.minLength] : acc, 0);
+
+    const widthScalingRatio = (calculatedData.width - fixedWidthsTotal - totalHorizontalGaps) / (currentTotalWidth - fixedWidthsTotal);
+    const heightScalingRatio = (calculatedData.height - fixedHeightsTotal - totalVerticalGaps) / (currentTotalHeight - fixedHeightsTotal);
+
+    let runningX = 0;
+    let runningY = 0;
+
+    arr = arr.map((obj, index) => {
+        let length = obj[keys.minLength] as number;
+        let newObj = {...obj};
+        const fix = obj.type === inputTypes[1];
+
+        // Scale width if not fixed
+        if (obj.side === inputSides[0]) {
+            if (!fix) {
+                length *= widthScalingRatio;
+            }
+            newObj.calculatedRow = runningX;
+            newObj.calculated = length;
+            runningX += length;
+
+            // Adjust the position for next object based on gaps
+            if (index < arr.length - 1) {
+                const currentGap = arr[index + 1][keys.row] - (obj[keys.row] + obj[keys.minLength]);
+                runningX += currentGap;
+            }
+        } else {
+            if (!fix) {
+                length *= heightScalingRatio;
+            }
+            newObj.calculatedColumn = runningY;
+            newObj.calculated = length;
+            runningY += length;
+
+            if (index < arr.length - 1) {
+                const currentGap = arr[index + 1][keys.column] - (obj[keys.column] + obj[keys.minLength]);
+                runningY += currentGap;
+            }
+        }
+
+        return newObj;
+    });
 }

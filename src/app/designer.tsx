@@ -7,7 +7,7 @@ import {
     groupBy,
     sumArr
 } from "@/app/lib/calculations";
-import {ItemType} from "@/app/types/Item";
+import {ItemType, TypeKeys} from "@/app/types/Item";
 import {
     BsDashSquare,
     BsFillArrowDownSquareFill,
@@ -51,7 +51,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         horizontal: [],
         vertical: []
     }
-    const keys = {
+    const keys: TypeKeys = {
         row: isCalculatedOn ? 'calculatedRow' : 'row',
         column: isCalculatedOn ? 'calculatedColumn' : 'column',
         minLength: isCalculatedOn ? 'calculated' : 'minLength',

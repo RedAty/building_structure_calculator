@@ -45,7 +45,11 @@ export interface CalculationData {
     ratio: number,
     ratioWidth?: number,
     ratioHeight?: number,
-    isOn: boolean,
+    isOn: boolean
+}
 
-
+export interface TypeKeys {
+    row: 'calculatedRow' | 'row',
+    column:  'calculatedColumn' | 'column',
+    minLength:  'calculated' | 'minLength',
 }

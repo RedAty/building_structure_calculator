@@ -61,3 +61,9 @@ export const readTextFile = (accept = 'application/json') => {
         fileInput.click();
     });
 }
+
+export const generateUniqueId = () => {
+    const array = new Uint32Array(4);
+    window.crypto.getRandomValues(array);
+    return Array.from(array).map(num => num.toString(36)).join('-');
+}

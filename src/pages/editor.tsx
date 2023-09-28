@@ -1,12 +1,11 @@
 'use client';
-import Image from 'next/image'
 import React, {useRef, useState} from "react";
 import {SVGDesigner} from "@/components/designer";
 import {CalculationData, ItemType} from "@/types/Item";
-import {areaM, getItemBoundariesInCM, increaseRunningRatio, toFixedNumber} from "@/lib/calculations";
+import {areaM, getItemBoundariesInCM, toFixedNumber} from "@/lib/calculations";
 import {
   BsCloudDownloadFill,
-  BsCloudUploadFill,
+  BsCloudUploadFill, BsDatabaseFillUp,
   BsEraserFill,
   BsFillGrid1X2Fill, BsFillImageFill,
   BsFillTrashFill, BsLayoutTextWindowReverse
@@ -16,11 +15,19 @@ import {INPUT_SIDES, INPUT_TYPES} from "@/lib/constants";
 import {downloadAsFile, readTextFile} from "@/lib/commons";
 import {ItemInput} from "@/components/itemInput";
 import AppContainer from "@/components/appContainer";
-
+import {LocalDB} from "@/lib/localDB";
+import {Project} from "@/types/project";
+import {useRouter, useSearchParams} from 'next/navigation';
 
 export default function EditorPage() {
-  const [items, setItems] = useState([] as ItemType[]);
-  const [name, setName] = useState('');
+  const searchParams = useSearchParams()
+  let id = searchParams.get('id') ?  Number(searchParams.get('id')) : null;
+  const projects = new LocalDB();
+  const project = id ? projects.getProjectById(id) : undefined;
+  console.error(id);
+  const router = useRouter();
+  const [items, setItems] = useState(project ? project.items : [] as ItemType[]);
+  const [name, setName] = useState(project ? project.name : '');
   const [ui, setUI] = useState({focus: "normal"} as GUIType);
 
   const maxLengthInput = useRef(null);
@@ -222,12 +229,29 @@ export default function EditorPage() {
     setUI(Object.assign({}, ui));
   }
 
+  function saveProject() {
+    const project = {
+      id: id || 0,
+      name: name,
+      items: items,
+      calculationData: calculatedData,
+      gui: ui
+    } as Project;
+
+    if (id) {
+      return projects.updateProject(project);
+    }
+    project.id = projects.addProject(project).id;
+
+    router.push('/editor?id=' + project.id);
+  }
+
   return (
     <AppContainer>
       <div className="z-10 w-full justify-between font-mono text-sm lg:flex flex-col">
         <div className="flex border-b border-gray-300 pb-6 pt-8
         backdrop-blur-2xl lg:static lg:w-auto dark:border-neutral-800 dark:from-inherit
-        lg:rounded-b-xl lg:border lg:bg-gray-50 lg:p-4">
+        lg:rounded-b-xl lg:border lg:bg-gray-50 lg:p-4 justify-between">
           <div className="flex h-[30px]">
             <input type="name" id="name"
                    defaultValue={name}
@@ -281,8 +305,19 @@ export default function EditorPage() {
                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                 <label htmlFor="checked-checkbox" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Calculated</label>
             </div>
+
           </div>
 
+          <div className="right-0 inline-flex rounded-md shadow-sm h-[30px] text-lg">
+            <button onClick={()=>saveProject()} type="button"
+                    className="px-2 text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100
+                    hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700
+                    dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:text-white dark:hover:bg-gray-600
+                    dark:focus:ring-blue-500 dark:focus:text-white">
+
+              <BsDatabaseFillUp />
+            </button>
+          </div>
 
         </div>
 

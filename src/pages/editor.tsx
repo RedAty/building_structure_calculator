@@ -1,11 +1,9 @@
 'use client';
 import Image from 'next/image'
 import React, {useRef, useState} from "react";
-import {inputSides, inputTypes, ItemInput, tailwindCSS} from "@/app/itemInput";
-import {SVGDesigner} from "@/app/designer";
-import {Commons} from "@/app/lib/commons";
-import {CalculationData, ItemType} from "@/app/types/Item";
-import {areaM, getItemBoundariesInCM, toFixedNumber} from "@/app/lib/calculations";
+import {SVGDesigner} from "@/components/designer";
+import {CalculationData, ItemType} from "@/types/Item";
+import {areaM, getItemBoundariesInCM, increaseRunningRatio, toFixedNumber} from "@/lib/calculations";
 import {
   BsCloudDownloadFill,
   BsCloudUploadFill,
@@ -13,10 +11,14 @@ import {
   BsFillGrid1X2Fill, BsFillImageFill,
   BsFillTrashFill, BsLayoutTextWindowReverse
 } from "react-icons/bs";
-import {GUIType} from "@/app/types/gui";
+import {GUIType} from "@/types/gui";
+import {INPUT_SIDES, INPUT_TYPES} from "@/lib/constants";
+import {downloadAsFile, readTextFile} from "@/lib/commons";
+import {ItemInput} from "@/components/itemInput";
+import AppContainer from "@/components/appContainer";
 
 
-export default function Home() {
+export default function EditorPage() {
   const [items, setItems] = useState([] as ItemType[]);
   const [name, setName] = useState('');
   const [ui, setUI] = useState({focus: "normal"} as GUIType);
@@ -74,11 +76,11 @@ export default function Home() {
   }
 
   const exportData = () => {
-    Commons.downloadAsFile(name, JSON.stringify(items), 'application/json');
+    downloadAsFile(name, JSON.stringify(items), 'application/json');
   }
 
   const importData = async function () {
-    const file = await Commons.readTextFile();
+    const file = await readTextFile();
     if (file && typeof file.value === "string") {
       const json = JSON.parse(file.value);
 
@@ -111,6 +113,7 @@ export default function Home() {
     if (!calcM2 || !calcHeight || !calcWidth) {
       return false;
     }
+    console.log(calcWidth.value, calcHeight.value)
     if (calcWidth.value && calcHeight.value) {
       const area = areaM(0,0, Number(calcWidth.value), Number(calcHeight.value));
       if (calcM2.value !== String(area)) {
@@ -122,13 +125,18 @@ export default function Home() {
   }
 
   function updateItemCalculations() {
+    /*increaseRunningRatio(items, calculatedData, {
+      row: "row",
+      column: "column",
+      minLength: "minLength"
+    });*/
     items.forEach(item => {
       const side = item.side;
-      if (side === inputSides[0]) { // Horizontal
+      if (side === INPUT_SIDES[0]) { // Horizontal
         item.calculatedRow = toFixedNumber(item.row * calculatedData.ratioWidth);
         item.calculatedColumn = toFixedNumber(item.column * calculatedData.ratioHeight);
         item.calculated = toFixedNumber(item.minLength * calculatedData.ratioWidth);
-      } else if (side === inputSides[1]) { // Vertical
+      } else if (side === INPUT_SIDES[1]) { // Vertical
         item.calculatedRow = toFixedNumber(item.row * calculatedData.ratioHeight);
         item.calculatedColumn = toFixedNumber(item.column * calculatedData.ratioWidth);
         item.calculated = toFixedNumber(item.minLength * calculatedData.ratioHeight);
@@ -146,8 +154,11 @@ export default function Home() {
       } else {
         console.error(e.target.value + ' is not numeric');
       }
+      console.error(key, e.target.value);
+
     } else if (e && e.target && e.target.value === '') {
       // User deleted the value
+      console.error(key, e.target.value);
       calculatedData[key] = itemBoundaries[key];
       /*if (itemBoundaries.hasOwnProperty(key)) {
         calculatedData[key] = itemBoundaries[key];
@@ -177,6 +188,7 @@ export default function Home() {
       updateItemCalculations();
 
       setCalculatedData(calculatedData);
+
       if (modifiedEarlier !== calculatedData.modified) {
         // Provoke a new refresh
         setItems([...items]);
@@ -211,29 +223,12 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4">
+    <AppContainer>
       <div className="z-10 w-full justify-between font-mono text-sm lg:flex flex-col">
-        <div className="flex border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8
-        backdrop-blur-2xl lg:static lg:w-auto dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit
-        lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+        <div className="flex border-b border-gray-300 pb-6 pt-8
+        backdrop-blur-2xl lg:static lg:w-auto dark:border-neutral-800 dark:from-inherit
+        lg:rounded-b-xl lg:border lg:bg-gray-50 lg:p-4">
           <div className="flex h-[30px]">
-            <a
-                className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-                href="https://reterics.com"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-              <Image
-                  src="/logo.png"
-                  alt="Reterics Logo"
-                  className="dark:invert"
-                  width={40}
-                  height={42}
-                  priority
-              />
-            </a>
-
-
             <input type="name" id="name"
                    defaultValue={name}
                    className="mr-8 max-w-[180px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -334,8 +329,8 @@ export default function Home() {
                                       onChange={(e) => updateItemById(item.id, {
                                         type: e.target.value
                                       })}
-                                      className={tailwindCSS.select} >
-                                {inputTypes.map(type=>(<option key={type}>{type}</option>))}
+                                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-[60px] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                {INPUT_TYPES.map(type=>(<option key={type}>{type}</option>))}
                               </select>
                               : item.type.substring(0,3)
                         }</td>
@@ -345,8 +340,8 @@ export default function Home() {
                                       onChange={(e) => updateItemById(item.id, {
                                         side: e.target.value
                                       })}
-                                      className={tailwindCSS.select} >
-                                {inputSides.map(type=>(<option key={type}>{type}</option>))}
+                                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-[60px] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" >
+                                {INPUT_SIDES.map(type=>(<option key={type}>{type}</option>))}
                               </select>
                               : item.side
                         }</td>
@@ -391,7 +386,7 @@ export default function Home() {
                           </td>
                         <td className="whitespace-nowrap px-3 py-2 min-w-[98px]" onClick={() => selectItem(item)}>
                           {
-                              item.type !== inputTypes[1] && item.selected ?
+                              item.type !== INPUT_TYPES[1] && item.selected ?
                                 <input type="number" defaultValue={item.maxLength} className="bg-gray-50 border
                               border-gray-300 text-gray-900 text-sm rounded-md
                               focus:ring-blue-500 focus:border-blue-500 block w-full min-w-[50px] dark:bg-gray-700
@@ -400,7 +395,7 @@ export default function Home() {
                                        onChange={(e) => updateItemById(item.id, {
                                          maxLength: Number(e.target.value || '0')
                                        })} />
-                                : item.type !== inputTypes[1] ?
+                                : item.type !== INPUT_TYPES[1] ?
                                     item.maxLength + ' cm' : '-'
                           }
                            </td>
@@ -424,6 +419,6 @@ export default function Home() {
           </div>
         }
         </div>
-    </main>
+    </AppContainer>
   )
 }

@@ -1,5 +1,5 @@
-import {CalculationData, ItemBoundary, ItemType, RectBoundary, TypeKeys} from "@/app/types/Item";
-import {DEFAULTS, inputSides, inputTypes} from "@/app/itemInput";
+import {CalculationData, ItemBoundary, ItemType, RectBoundary, TypeKeys} from "@/types/Item";
+import {DEFAULTS, INPUT_SIDES, INPUT_TYPES} from "@/lib/constants";
 
 export const getItemBoundariesInCM = (items: ItemType[], key : 'calculated'|'minLength'|'maxLength' = 'minLength',
                                       column = 'column', row = 'row'): ItemBoundary => {
@@ -14,12 +14,12 @@ export const getItemBoundariesInCM = (items: ItemType[], key : 'calculated'|'min
             rightX,
             topY,
             bottomY;
-        if (type === inputSides[0]) { // Horizontal
+        if (type === INPUT_SIDES[0]) { // Horizontal
             leftX = item[row];
             rightX = item[row] + (item[key] === undefined ? item[fallbackKey] : item[key]);
             topY = item[column];
             bottomY = item[column];
-        } else if (type === inputSides[1]) { // Vertical
+        } else if (type === INPUT_SIDES[1]) { // Vertical
             leftX = item[column];
             rightX = item[column];
             topY = item[row];
@@ -70,12 +70,12 @@ export const getItemRectDimensions = (items: ItemType[]): RectBoundary => {
             rightX,
             topY,
             bottomY;
-        if (type === inputSides[0]) { // Horizontal
+        if (type === INPUT_SIDES[0]) { // Horizontal
             leftX = item.x;
             rightX = item.x + item.width
             topY = item.y;
             bottomY = item.y;
-        } else if (type === inputSides[1]) { // Vertical
+        } else if (type === INPUT_SIDES[1]) { // Vertical
             leftX = item.x;
             rightX = item.x;
             topY = item.y;
@@ -180,9 +180,16 @@ export const toFixedNumber = (num: number) => {
 }
 
 export const increaseRunningRatio = (arr: ItemType[], calculatedData: CalculationData, keys: TypeKeys) => {
-    const horizontal = arr.filter(item=>item.side === inputSides[0]);
-    const vertical = arr.filter(item=>item.side === inputSides[1]);
+    // TODO: It handles every vertical and horizontal lines like they are one big line
+    const horizontal = arr.filter(item=>item.side === INPUT_SIDES[0]);
+    const vertical = arr.filter(item=>item.side === INPUT_SIDES[1]);
 
+    const initialHorizontal = Math.min(...horizontal.map(i => i[keys.row] as number));
+    const initialVertical = Math.min(...vertical.map(i => i[keys.column] as number));
+console.log(horizontal)
+console.log(vertical)
+console.log(initialHorizontal)
+console.log(initialVertical)
     const currentTotalWidth = horizontal.reduce((acc, obj) => acc + obj[keys.minLength], 0);
     const currentTotalHeight = vertical.reduce((acc, obj) => acc + obj[keys.minLength], 0);
 
@@ -194,28 +201,30 @@ export const increaseRunningRatio = (arr: ItemType[], calculatedData: Calculatio
     }, 0);
 
     const fixedWidthsTotal = horizontal
-        .reduce((acc, obj) => obj.type === inputTypes[1] ? acc + obj[keys.minLength] : acc, 0);
+        .reduce((acc, obj) => obj.type === INPUT_TYPES[1] ? acc + obj[keys.minLength] : acc, 0);
     const fixedHeightsTotal = vertical
-        .reduce((acc, obj) => obj.type === inputTypes[1] ? acc + obj[keys.minLength] : acc, 0);
+        .reduce((acc, obj) => obj.type === INPUT_TYPES[1] ? acc + obj[keys.minLength] : acc, 0);
 
-    const widthScalingRatio = (calculatedData.width - fixedWidthsTotal - totalHorizontalGaps) / (currentTotalWidth - fixedWidthsTotal);
-    const heightScalingRatio = (calculatedData.height - fixedHeightsTotal - totalVerticalGaps) / (currentTotalHeight - fixedHeightsTotal);
-
+    const widthScalingRatio = (currentTotalWidth - fixedWidthsTotal) ?
+        (calculatedData.calculatedHeight - fixedWidthsTotal - totalHorizontalGaps) / (currentTotalWidth - fixedWidthsTotal) : 1;
+    const heightScalingRatio = (currentTotalHeight - fixedHeightsTotal) ?
+        (calculatedData.calculatedHeight - fixedHeightsTotal - totalVerticalGaps) / (currentTotalHeight - fixedHeightsTotal) : 1;
+console.log(widthScalingRatio, fixedWidthsTotal, totalHorizontalGaps, currentTotalWidth);
+console.log(heightScalingRatio, fixedHeightsTotal, totalVerticalGaps, currentTotalHeight, calculatedData.height);
     let runningX = 0;
     let runningY = 0;
 
-    arr = arr.map((obj, index) => {
+    arr.forEach((obj, index) => {
         let length = obj[keys.minLength] as number;
-        let newObj = {...obj};
-        const fix = obj.type === inputTypes[1];
+        const fix = obj.type === INPUT_TYPES[1];
 
         // Scale width if not fixed
-        if (obj.side === inputSides[0]) {
+        if (obj.side === INPUT_SIDES[0]) {
             if (!fix) {
                 length *= widthScalingRatio;
             }
-            newObj.calculatedRow = runningX;
-            newObj.calculated = length;
+            obj.calculatedRow = runningX;
+            obj.calculated = toFixedNumber(length);
             runningX += length;
 
             // Adjust the position for next object based on gaps
@@ -223,20 +232,27 @@ export const increaseRunningRatio = (arr: ItemType[], calculatedData: Calculatio
                 const currentGap = arr[index + 1][keys.row] - (obj[keys.row] + obj[keys.minLength]);
                 runningX += currentGap;
             }
+            if (typeof calculatedData.ratioHeight !== 'number') {
+                calculatedData.ratioHeight = 1;
+            }
+            obj.calculatedColumn = toFixedNumber(obj.column * calculatedData.ratioHeight);
+
         } else {
             if (!fix) {
                 length *= heightScalingRatio;
             }
-            newObj.calculatedColumn = runningY;
-            newObj.calculated = length;
+            //obj.calculatedColumn = runningY;
+            obj.calculated = toFixedNumber(length);
             runningY += length;
 
             if (index < arr.length - 1) {
                 const currentGap = arr[index + 1][keys.column] - (obj[keys.column] + obj[keys.minLength]);
                 runningY += currentGap;
             }
+            obj.calculatedRow = toFixedNumber(obj.row * calculatedData.ratioWidth);
         }
 
-        return newObj;
+        return obj;
     });
+    return arr;
 }

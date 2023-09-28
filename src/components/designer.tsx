@@ -1,4 +1,4 @@
-import {DEFAULTS, inputSides, inputTypes} from "@/app/itemInput";
+import {DEFAULTS, INPUT_SIDES, INPUT_TYPES} from "@/lib/constants";
 import {useEffect, useRef, useState} from "react";
 import {
     convertFromCoordinate, convertToCoordinate,
@@ -6,8 +6,8 @@ import {
     getTextAttributesForRect,
     groupBy,
     sumArr
-} from "@/app/lib/calculations";
-import {ItemType, TypeKeys} from "@/app/types/Item";
+} from "@/lib/calculations";
+import {ItemType, TypeKeys} from "@/types/Item";
 import {
     BsDashSquare,
     BsFillArrowDownSquareFill,
@@ -16,7 +16,7 @@ import {
     BsXSquare, BsZoomIn, BsZoomOut
 } from "react-icons/bs";
 
-var selectedElement, offset, dragStarted, timeout;
+let selectedElement, offset, dragStarted, timeout;
 
 
 export function SVGDesigner({ items, updateItemById, selectItem, calculatedData, isCalculatedOn,
@@ -56,11 +56,11 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         column: isCalculatedOn ? 'calculatedColumn' : 'column',
         minLength: isCalculatedOn ? 'calculated' : 'minLength',
     }
-    let groupedColumns = groupBy(jsonData[inputSides[0]], 'column');
+    let groupedColumns = groupBy(jsonData[INPUT_SIDES[0]], 'column');
     for(const item in groupedColumns) {
         data.horizontal.push(groupedColumns[item]);
     }
-    groupedColumns = groupBy(jsonData[inputSides[1]], 'column');
+    groupedColumns = groupBy(jsonData[INPUT_SIDES[1]], 'column');
     for(const item in groupedColumns) {
         data.vertical.push(groupedColumns[item]);
     }
@@ -196,10 +196,10 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                 const y = parseInt(selectedElement.getAttributeNS(null, "y"));
                 item.x = x;
                 item.y = y;
-                if (item.side === inputSides[0]) { // Horizontal
+                if (item.side === INPUT_SIDES[0]) { // Horizontal
                     item.row = convertFromCoordinate(item.x, centimeterPixelRatio);
                     item.column = convertFromCoordinate(item.y, centimeterPixelRatio);
-                } else if (item.side === inputSides[1]) { // Vertical
+                } else if (item.side === INPUT_SIDES[1]) { // Vertical
                     item.column = convertFromCoordinate(item.x, centimeterPixelRatio);
                     item.row = convertFromCoordinate(item.y, centimeterPixelRatio);
                 }
@@ -284,7 +284,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
 
     function changeMax() {
         const selectedItem = items.find(i=>i.selected);
-        if (max.current && selectedItem && selectedItem.type === inputTypes[0]) {
+        if (max.current && selectedItem && selectedItem.type === INPUT_TYPES[0]) {
             const value = max.current.value;
             if (value !== maxNumber.current.value) {
                 maxNumber.current.value = value;
@@ -338,7 +338,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
             updateItemById(item.id, {
                 column: item.row,
                 row: item.column,
-                side: item.side === inputSides[0] ? inputSides[1] : inputSides[0],
+                side: item.side === INPUT_SIDES[0] ? INPUT_SIDES[1] : INPUT_SIDES[0],
             });
         } else {
             range.current.value = item.column;
@@ -399,9 +399,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         if (item) {
             switch (type) {
                 case 'up':
-                    if (item.side === inputSides[0]) { // Horizontal
+                    if (item.side === INPUT_SIDES[0]) { // Horizontal
                         item.column -= centimeterPixelRatio;
-                    } else if (item.side === inputSides[1]) { // Vertical
+                    } else if (item.side === INPUT_SIDES[1]) { // Vertical
                         item.row -= centimeterPixelRatio
                     }
                     updateItemById(item.id, {
@@ -410,9 +410,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                     });
                     break;
                 case 'down':
-                    if (item.side === inputSides[0]) { // Horizontal
+                    if (item.side === INPUT_SIDES[0]) { // Horizontal
                         item.column += centimeterPixelRatio;
-                    } else if (item.side === inputSides[1]) { // Vertical
+                    } else if (item.side === INPUT_SIDES[1]) { // Vertical
                         item.row += centimeterPixelRatio
                     }
                     updateItemById(item.id, {
@@ -421,9 +421,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                     });
                     break;
                 case 'left':
-                    if (item.side === inputSides[0]) { // Horizontal
+                    if (item.side === INPUT_SIDES[0]) { // Horizontal
                         item.row -= centimeterPixelRatio;
-                    } else if (item.side === inputSides[1]) { // Vertical
+                    } else if (item.side === INPUT_SIDES[1]) { // Vertical
                         item.column -= centimeterPixelRatio
                     }
                     updateItemById(item.id, {
@@ -432,9 +432,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                     });
                     break;
                 case 'right':
-                    if (item.side === inputSides[0]) { // Horizontal
+                    if (item.side === INPUT_SIDES[0]) { // Horizontal
                         item.row += centimeterPixelRatio;
-                    } else if (item.side === inputSides[1]) { // Vertical
+                    } else if (item.side === INPUT_SIDES[1]) { // Vertical
                         item.column += centimeterPixelRatio
                     }
                     updateItemById(item.id, {

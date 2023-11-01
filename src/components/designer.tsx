@@ -449,42 +449,42 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
     return (
         <div ref={svgParent} className="ml-2 mt-2 h-full w-full ">
             <div className="absolute flex flex-col right-0 mr-4 pr-1 pt-1 items-center">
-                <button className={selected ? "mb-2 text-lg" : "mb-2 text-lg text-gray-200"}
+                <button className={selected ? "mb-2 text-lg dark:text-gray-900" : "mb-2 text-lg text-gray-200"}
                         onClick={()=>deleteSelected()}>
                     <BsXSquare />
                 </button>
 
-                <button className="mb-1 text-lg"
+                <button className="mb-1 text-lg dark:text-gray-900"
                         onClick={()=>setCentimeterPixelRatio(centimeterPixelRatio-1)}>
                     <BsZoomIn />
                 </button>
-                <button className="mb-1 text-lg"
+                <button className="mb-1 text-lg dark:text-gray-900"
                         onClick={()=>setCentimeterPixelRatio(centimeterPixelRatio+1)}>
                     <BsZoomOut />
                 </button>
 
-                <button className={selected ? "mb-1 text-lg mt-2" : "mb-1 text-lg mt-2 text-gray-200"}
+                <button className={selected ? "mb-1 text-lg mt-2 dark:text-gray-900" : "mb-1 text-lg mt-2 text-gray-200"}
                         onClick={()=>selected && scaleItem({deltaY: -1})}>
                     <BsPlusSquare />
                 </button>
-                <button className={selected ? "mb-1 text-lg" : "mb-1 text-lg text-gray-200"}
+                <button className={selected ? "mb-1 text-lg dark:text-gray-900" : "mb-1 text-lg text-gray-200"}
                         onClick={()=>selected && scaleItem({deltaY: 1})}>
                     <BsDashSquare />
                 </button>
-                <button className={selected ? "mb-1 text-lg" : "mb-1 text-lg text-gray-200"}
+                <button className={selected ? "mb-1 text-lg dark:text-gray-900" : "mb-1 text-lg text-gray-200"}
                         onClick={()=>moveSelected('up')}>
                     <BsFillArrowUpSquareFill />
                 </button>
                 <div className="button-group flex-row">
-                    <button className={selected ? "mb-1 text-lg mr-0.5" : "mb-1 text-lg mr-0.5 text-gray-200"}
+                    <button className={selected ? "mb-1 text-lg mr-0.5 dark:text-gray-900" : "mb-1 text-lg mr-0.5 text-gray-200"}
                             onClick={()=>moveSelected('left')}>
                         <BsFillArrowLeftSquareFill />
                     </button>
-                    <button className={selected ? "mb-1 text-lg mr-0.5" : "mb-1 text-lg mr-0.5 text-gray-200"}
+                    <button className={selected ? "mb-1 text-lg mr-0.5 dark:text-gray-900" : "mb-1 text-lg mr-0.5 text-gray-200"}
                             onClick={()=>moveSelected('down')}>
                         <BsFillArrowDownSquareFill />
                     </button>
-                    <button className={selected ? "mb-1 text-lg" : "mb-1 text-lg text-gray-200"}
+                    <button className={selected ? "mb-1 text-lg dark:text-gray-900" : "mb-1 text-lg text-gray-200"}
                             onClick={()=>moveSelected('right')}>
                         <BsFillArrowRightSquareFill />
                     </button>

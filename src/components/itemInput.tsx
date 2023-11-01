@@ -3,7 +3,7 @@ import {BsPlusCircleFill} from "react-icons/bs";
 import {DEFAULTS, INPUT_SIDES, INPUT_TYPES} from "@/lib/constants";
 
 
-export function ItemInput({ onAddItem }) {
+export function ItemInput({ onAddItem }: {onAddItem: Function}) {
     const [name, setName] = useState(new Date().getTime().toString().substring(6));
     const [type, setType] = useState(INPUT_TYPES[0]);
     const [side, setSide] = useState(INPUT_SIDES[1]);
@@ -11,9 +11,9 @@ export function ItemInput({ onAddItem }) {
     const [maxLength, setMaxLength] = useState(DEFAULTS.max);
     const [column, setColumn] = useState(DEFAULTS.column);
     const [row, setRow] = useState(DEFAULTS.row);
-    const inputRef = useRef(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const handleNumeric2Change = (value) => {
+    const handleNumeric2Change = (value: number) => {
         setMaxLength(value);
         if (type === INPUT_TYPES[1]) {
             setMinLength(value);
@@ -44,7 +44,8 @@ export function ItemInput({ onAddItem }) {
     };
 
     return (
-        <div className="flex flex-row ml-6 bg-gray-100 object-fill	px-2 pb-2 pl-1 rounded-b-lg max-w-[820px]">
+        <div className="flex flex-row ml-6 bg-gray-100 dark:bg-gray-800 object-fillpx-2 pb-2 pl-1 pr-2 rounded-b-lg
+        max-w-[824px]">
             <div className="flex flex-col ml-2">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-900 dark:text-white" >Name</label>
                 <input

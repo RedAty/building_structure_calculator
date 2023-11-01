@@ -251,14 +251,14 @@ export default function EditorPage() {
       <div className="z-10 w-full justify-between font-mono text-sm lg:flex flex-col">
         <div className="flex border-b border-gray-300 pb-6 pt-8
         backdrop-blur-2xl lg:static lg:w-auto dark:border-neutral-800 dark:from-inherit
-        lg:rounded-b-xl lg:border lg:bg-gray-50 lg:p-4 justify-between">
+        lg:rounded-b-xl lg:border lg:bg-gray-50 dark:lg:bg-gray-800 lg:p-4 justify-between">
           <div className="flex h-[30px]">
-            <input type="name" id="name"
+            <input name="name" id="name" type="text"
                    defaultValue={name}
                    className="mr-8 max-w-[180px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    placeholder="Project Name" onChange={changeName} />
 
-            <input type="m21" id="m21"
+            <input name="m21" id="m21" type="number"
                    className="max-w-[80px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    placeholder={squareMeter.toString()} />
             <label htmlFor="m21" className="block text-sm font-medium text-gray-900 dark:text-white w-[50px] p-1">m2</label>
@@ -287,16 +287,22 @@ export default function EditorPage() {
 
             <label className="block text-sm font-medium text-gray-900 dark:text-white p-1">Targets:</label>
 
-            <input type="calcM2" id="calcM2"
-                   className="max-w-[65px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            <input name="calcM2" id="calcM2" type="number"
+                   className="max-w-[65px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                   focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600
+                   dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    placeholder={calculatedData.m2.toString()} onChange={(e)=>changeCalculatedData(e, 'm2')} />
             <label htmlFor="calcM2" className="block text-sm font-medium text-gray-900 dark:text-white w-[30px] p-1">m2</label>
-            <input type="calcWidth" id="calcWidth"
-                   className="max-w-[55px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            <input name="calcWidth" id="calcWidth" type="number"
+                   className="max-w-[55px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                   focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600
+                   dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    placeholder={calculatedData.width.toString()} onChange={(e)=>changeCalculatedData(e, 'calculatedWidth')} />
             <label htmlFor="calcWidth" className="block text-sm font-medium text-gray-900 dark:text-white w-[70px] p-1">cm with</label>
-            <input type="calcHeight" id="calcHeight"
-                   className="max-w-[55px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            <input name="calcHeight" id="calcHeight" type="number"
+                   className="max-w-[55px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+                   focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600
+                   dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    placeholder={calculatedData.height.toString()} onChange={(e)=>changeCalculatedData(e, 'calculatedHeight')} />
             <label htmlFor="calcHeight" className="block text-sm font-medium text-gray-900 dark:text-white w-[85px] p-1">cm height</label>
 

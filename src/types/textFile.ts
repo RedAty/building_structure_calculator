@@ -1,5 +1,5 @@
 
 export interface TextFile {
-    value: string|ArrayBuffer,
+    value: string|ArrayBuffer|null,
     file_input?: File
 }

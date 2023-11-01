@@ -1,5 +1,5 @@
 import {DEFAULTS, INPUT_SIDES, INPUT_TYPES} from "@/lib/constants";
-import {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
     convertFromCoordinate, convertToCoordinate,
     getItemRectDimensions,
@@ -7,7 +7,7 @@ import {
     groupBy,
     sumArr
 } from "@/lib/calculations";
-import {ItemType, TypeKeys} from "@/types/Item";
+import {CalculationData, ItemType, TypeKeys} from "@/types/Item";
 import {
     BsDashSquare,
     BsFillArrowDownSquareFill,
@@ -16,11 +16,22 @@ import {
     BsXSquare, BsZoomIn, BsZoomOut
 } from "react-icons/bs";
 
-let selectedElement, offset, dragStarted, timeout;
+let selectedElement: SVGElement|null,
+    offset: {x: number, y: number},
+    dragStarted: boolean,
+    timeout: NodeJS.Timeout|number;
 
 
 export function SVGDesigner({ items, updateItemById, selectItem, calculatedData, isCalculatedOn,
-                                deleteItem }) {
+                                deleteItem }:
+                                {
+                                    items: ItemType[],
+                                    updateItemById: Function,
+                                    selectItem: Function,
+                                    calculatedData: CalculationData,
+                                    isCalculatedOn: boolean,
+                                    deleteItem: Function
+                                }) {
     const [controllerSettings, setControllerSettings] = useState({
         maxColumn:100,
         minLength:100,
@@ -31,20 +42,20 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         row: 0,
         maxRow: 100
     });
-    const svgParent = useRef(null);
-    const svg = useRef(null);
+    const svgParent = useRef<HTMLDivElement>(null);
+    const svg = useRef<SVGSVGElement>(null);
     const [width, setWidth] = useState(400);
     const [height, setHeight] = useState(540);
     const [centimeterPixelRatio, setCentimeterPixelRatio] = useState(DEFAULTS.centimeterPixelRatio);
 
-    const range = useRef(null);
-    const rangeNumber = useRef(null);
-    const min = useRef(null);
-    const minNumber = useRef(null);
-    const max = useRef(null);
-    const maxNumber = useRef(null);
-    const row = useRef(null);
-    const rowNumber = useRef(null);
+    const range = useRef<HTMLInputElement>(null);
+    const rangeNumber = useRef<HTMLInputElement>(null);
+    const min = useRef<HTMLInputElement>(null);
+    const minNumber = useRef<HTMLInputElement>(null);
+    const max = useRef<HTMLInputElement>(null);
+    const maxNumber = useRef<HTMLInputElement>(null);
+    const row = useRef<HTMLInputElement>(null);
+    const rowNumber = useRef<HTMLInputElement>(null);
 
     const jsonData = groupBy(items, 'side');
     const data= {
@@ -79,10 +90,10 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
             maxColumn: Math.floor(Math.min(Math.max(sumArr(items, keys.column) * 1.3, 100), maximums)) || maximums,
             minLength: Math.floor(Math.min(Math.max(sumArr(items, keys.minLength) * 1.3, 100), maximums)) || maximums,
             maxLength: Math.floor(Math.min(Math.max(sumArr(items, 'maxLength') * 1.3, 100), maximums)) || maximums,
-            min: selected ? selected.minLength : 0,
-            max: selected ? selected.maxLength : 0,
-            column: selected ? selected.column : 0,
-            row: selected ? selected[keys.row] : 0,
+            min: selected ? Number(selected.minLength) : 0,
+            max: selected ? Number(selected.maxLength) : 0,
+            column: selected ? Number(selected.column) : 0,
+            row: selected ? Number(selected[keys.row]) : 0,
             maxRow: Math.floor(Math.min(Math.max(sumArr(items, keys.row) * 1.3, 100), maximums)) || maximums
         });
     }
@@ -145,17 +156,24 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         boundaryRect.height + baseY*2
     );
 
-    function getMousePosition(evt) {
-        const CTM = svg.current.getScreenCTM();
+    function getMousePosition(evt: React.MouseEvent<SVGSVGElement, MouseEvent>): {x: number, y: number} {
+        const CTM = svg.current ? svg.current.getScreenCTM() : null;
+        if (CTM !== null) {
+            return {
+                x: (evt.clientX - CTM.e) / CTM.a,
+                y: (evt.clientY - CTM.f) / CTM.d
+            };
+        }
         return {
-            x: (evt.clientX - CTM.e) / CTM.a,
-            y: (evt.clientY - CTM.f) / CTM.d
+            x: 0,
+            y: 0
         };
     }
 
-    function startDrag(evt) {
-        if (!isCalculatedOn && evt.target.classList.contains('draggable')) {
-            const id = evt.target.getAttribute('id');
+    function startDrag(evt: React.MouseEvent<SVGSVGElement, MouseEvent>) {
+        const target = evt.target as SVGSVGElement;
+        if (!isCalculatedOn && target.classList.contains('draggable')) {
+            const id = target.getAttribute('id');
             if (timeout){
                 clearTimeout(timeout);
             }
@@ -163,7 +181,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                 dragStarted = true;
                 console.log('DragStarted');
             }, 350);
-            selectedElement = items.find(i=>String(i.id) === String(id)) ? evt.target : null;
+            selectedElement = items.find(i=>String(i.id) === String(id)) ? evt.target as SVGElement : null;
             if (selectedElement) {
                 offset = getMousePosition(evt);
                 offset.x -= parseFloat(selectedElement.getAttributeNS(null, "x"));
@@ -172,16 +190,16 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         }
     }
 
-    function drag(evt) {
+    function drag(evt: React.MouseEvent<SVGSVGElement, MouseEvent>) {
         if (!isCalculatedOn && selectedElement && dragStarted) {
             evt.preventDefault();
             const coord = getMousePosition(evt);
-            selectedElement.setAttributeNS(null, "x",  coord.x - offset.x);
-            selectedElement.setAttributeNS(null, "y", coord.y - offset.y);
+            selectedElement.setAttributeNS(null, "x",  (coord.x - offset.x).toString());
+            selectedElement.setAttributeNS(null, "y", (coord.y - offset.y).toString());
         }
     }
 
-    function endDrag(evt) {
+    function endDrag() {
         if (timeout){
             clearTimeout(timeout);
         }
@@ -215,19 +233,31 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         selectedElement = null;
     }
 
-    function onSelectItem (item) {
+    function onSelectItem (item: ItemType) {
         if (dragStarted) {
             return;
         }
         if (item.selected) {
             selectItem({id: null});
         } else {
-            range.current.value = item.column;
-            rangeNumber.current.value = item.column;
-            min.current.value = item.minLength;
-            minNumber.current.value = item.minLength;
-            max.current.value = item.maxLength;
-            maxNumber.current.value = item.maxLength;
+            if (range.current) {
+                range.current.value = item.column.toString();
+            }
+            if (rangeNumber.current) {
+                rangeNumber.current.value = item.column.toString();
+            }
+            if (min.current) {
+                min.current.value = item.minLength.toString();
+            }
+            if (minNumber.current) {
+                minNumber.current.value = item.minLength.toString();
+            }
+            if (max.current) {
+                max.current.value = item.maxLength.toString();
+            }
+            if (maxNumber.current) {
+                maxNumber.current.value = item.maxLength.toString();
+            }
             selectItem(item);
             refreshController();
         }
@@ -238,7 +268,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         const selectedItem = items.find(i=>i.selected);
         if (range.current && selectedItem) {
             const value = range.current.value;
-            if (value !== rangeNumber.current.value) {
+            if (rangeNumber.current && value !== rangeNumber.current.value) {
                 rangeNumber.current.value = value;
             }
             updateItemById(selectedItem.id, {
@@ -254,7 +284,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         const selectedItem = items.find(i=>i.selected);
         if (row.current && selectedItem) {
             const value = row.current.value;
-            if (value !== rowNumber.current.value) {
+            if (rowNumber.current && value !== rowNumber.current.value) {
                 rowNumber.current.value = value;
             }
             updateItemById(selectedItem.id, {
@@ -270,7 +300,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         const selectedItem = items.find(i=>i.selected);
         if (min.current && selectedItem) {
             const value = min.current.value;
-            if (value !== minNumber.current.value) {
+            if (minNumber.current && value !== minNumber.current.value) {
                 minNumber.current.value = value;
             }
             updateItemById(selectedItem.id, {
@@ -286,7 +316,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         const selectedItem = items.find(i=>i.selected);
         if (max.current && selectedItem && selectedItem.type === INPUT_TYPES[0]) {
             const value = max.current.value;
-            if (value !== maxNumber.current.value) {
+            if (maxNumber.current && value !== maxNumber.current.value) {
                 maxNumber.current.value = value;
             }
             updateItemById(selectedItem.id, {
@@ -298,7 +328,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         }
     }
 
-    function changeRangeNumber(e) {
+    function changeRangeNumber(e: React.ChangeEvent<HTMLInputElement>) {
         const selectedItem = items.find(i=>i.selected);
         if (range.current && selectedItem) {
             range.current.value = e.target.value;
@@ -306,7 +336,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         }
     }
 
-    function changeMinNumber(e) {
+    function changeMinNumber(e: React.ChangeEvent<HTMLInputElement>) {
         const selectedItem = items.find(i=>i.selected);
         if (min.current && selectedItem) {
             min.current.value = e.target.value;
@@ -314,7 +344,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         }
     }
 
-    function changeMaxNumber(e) {
+    function changeMaxNumber(e: React.ChangeEvent<HTMLInputElement>) {
         const selectedItem = items.find(i=>i.selected);
         if (max.current && selectedItem) {
             max.current.value = e.target.value;
@@ -322,7 +352,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         }
     }
 
-    function changeRowNumber(e) {
+    function changeRowNumber(e: React.ChangeEvent<HTMLInputElement>) {
         const selectedItem = items.find(i=>i.selected);
         if (row.current && selectedItem) {
             row.current.value = e.target.value;
@@ -330,7 +360,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
         }
     }
 
-    function rotateItem(item, e) {
+    function rotateItem(item: ItemType, e: React.MouseEvent<SVGRectElement, MouseEvent>) {
         if (e) {
             e.preventDefault();
         }
@@ -341,45 +371,57 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                 side: item.side === INPUT_SIDES[0] ? INPUT_SIDES[1] : INPUT_SIDES[0],
             });
         } else {
-            range.current.value = item.column;
-            rangeNumber.current.value = item.column;
-            min.current.value = item.minLength;
-            minNumber.current.value = item.minLength;
-            max.current.value = item.maxLength;
-            maxNumber.current.value = item.maxLength;
+            if (range.current) {
+                range.current.value = item.column.toString();
+            }
+            if (rangeNumber.current) {
+                rangeNumber.current.value = item.column.toString();
+            }
+            if (min.current) {
+                min.current.value = item.minLength.toString();
+            }
+            if (minNumber.current) {
+                minNumber.current.value = item.minLength.toString();
+            }
+            if (max.current) {
+                max.current.value = item.maxLength.toString();
+            }
+            if (maxNumber.current) {
+                maxNumber.current.value = item.maxLength.toString();
+            }
             selectItem(item);
             refreshController();
         }
     }
 
-    function scaleItem(event) {
+    function scaleItem(options: {deltaY: number}) {
         const selectedItem = items.find(i=>i.selected);
         if (selectedItem) {
-            if (event.deltaY > 0) {
+            if (options.deltaY > 0) {
                 // Scrolling down
                 updateItemById(selectedItem.id, {
-                    minLength: selectedItem.minLength - DEFAULTS.zoomStep
+                    minLength: Number(selectedItem.minLength) - DEFAULTS.zoomStep
                 })
-            } else if (event.deltaY < 0) {
+            } else if (options.deltaY < 0) {
                 // Scrolling up
                 updateItemById(selectedItem.id, {
-                    minLength: selectedItem.minLength + DEFAULTS.zoomStep
+                    minLength: Number(selectedItem.minLength) + DEFAULTS.zoomStep
                 })
             }
         } else {
             // If no item selected we modify SVG Zooming
-            if (event.deltaY > 0) {
+            if (options.deltaY > 0) {
                 // Scrolling down
                 setCentimeterPixelRatio(centimeterPixelRatio-1);
-            } else if (event.deltaY < 0) {
+            } else if (options.deltaY < 0) {
                 // Scrolling up
                 setCentimeterPixelRatio(centimeterPixelRatio+1);
             }
         }
     }
 
-    function deselectOnBackground(e) {
-        if (e.target.tagName.toUpperCase() === 'SVG') {
+    function deselectOnBackground(e: React.MouseEvent<SVGSVGElement, MouseEvent>) {
+        if ((e.target as SVGElement).tagName.toUpperCase() === 'SVG') {
             const selectedItem = items.find(i=>i.selected);
             if (selectedItem) {
                 selectItem({id: null});
@@ -400,9 +442,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
             switch (type) {
                 case 'up':
                     if (item.side === INPUT_SIDES[0]) { // Horizontal
-                        item.column -= centimeterPixelRatio;
+                        item.column = Number(item.column) - centimeterPixelRatio;
                     } else if (item.side === INPUT_SIDES[1]) { // Vertical
-                        item.row -= centimeterPixelRatio
+                        item.row = Number(item.row) - centimeterPixelRatio
                     }
                     updateItemById(item.id, {
                         column: item.column,
@@ -411,9 +453,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                     break;
                 case 'down':
                     if (item.side === INPUT_SIDES[0]) { // Horizontal
-                        item.column += centimeterPixelRatio;
+                        item.column = Number(item.column) + centimeterPixelRatio;
                     } else if (item.side === INPUT_SIDES[1]) { // Vertical
-                        item.row += centimeterPixelRatio
+                        item.row = Number(item.row) + centimeterPixelRatio
                     }
                     updateItemById(item.id, {
                         column: item.column,
@@ -422,9 +464,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                     break;
                 case 'left':
                     if (item.side === INPUT_SIDES[0]) { // Horizontal
-                        item.row -= centimeterPixelRatio;
+                        item.row = Number(item.row) - centimeterPixelRatio
                     } else if (item.side === INPUT_SIDES[1]) { // Vertical
-                        item.column -= centimeterPixelRatio
+                        item.column = Number(item.column) - centimeterPixelRatio;
                     }
                     updateItemById(item.id, {
                         column: item.column,
@@ -433,9 +475,9 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
                     break;
                 case 'right':
                     if (item.side === INPUT_SIDES[0]) { // Horizontal
-                        item.row += centimeterPixelRatio;
+                        item.row = Number(item.row) + centimeterPixelRatio
                     } else if (item.side === INPUT_SIDES[1]) { // Vertical
-                        item.column += centimeterPixelRatio
+                        item.column = Number(item.column) + centimeterPixelRatio;
                     }
                     updateItemById(item.id, {
                         column: item.column,
@@ -493,7 +535,7 @@ export function SVGDesigner({ items, updateItemById, selectItem, calculatedData,
             <svg ref={svg} width={width} height={height} className="h-full bg-gray-50 w-full" style={{/*height: 'calc(100% - 160px)'*/}}
             onMouseDown={startDrag}
             onMouseMove={drag}
-            onMouseUp={endDrag}
+            onMouseUp={()=>endDrag()}
             onMouseLeave={endDrag}
             onWheel={scaleItem}
             onClick={deselectOnBackground}

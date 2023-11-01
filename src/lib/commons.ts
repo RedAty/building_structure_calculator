@@ -25,7 +25,7 @@ export const downloadAsFile = (name: string, body, fileType = 'text/plain') => {
     }
 };
 
-export const uploadFileInputAsText = (file: Blob): Promise<string|ArrayBuffer> => {
+export const uploadFileInputAsText = (file: Blob): Promise<string|ArrayBuffer|null> => {
     return new Promise(resolve => {
         const reader = new FileReader();
         reader.onload = function () {
@@ -38,7 +38,7 @@ export const uploadFileInputAsText = (file: Blob): Promise<string|ArrayBuffer> =
     })
 };
 
-export const readTextFile = (accept = 'application/json') => {
+export const readTextFile = (accept = 'application/json'): Promise<TextFile> => {
     return new Promise(resolve => {
         const fileInput = document.createElement("input");
         fileInput.setAttribute("type", "file");

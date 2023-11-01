@@ -21,10 +21,9 @@ import {useRouter, useSearchParams} from 'next/navigation';
 
 export default function EditorPage() {
   const searchParams = useSearchParams()
-  let id = searchParams.get('id') ?  Number(searchParams.get('id')) : null;
+  let id = searchParams && searchParams.get('id') ?  Number(searchParams.get('id')) : null;
   const projects = new LocalDB();
   const project = id ? projects.getProjectById(id) : undefined;
-  console.error(id);
   const router = useRouter();
   const [items, setItems] = useState(project ? project.items : [] as ItemType[]);
   const [name, setName] = useState(project ? project.name : '');
@@ -58,11 +57,11 @@ export default function EditorPage() {
 
     setCalculatedData(calculatedData);
   }
-  const addItemToList = (item) => {
+  const addItemToList = (item: ItemType) => {
     setItems([...items, item]);
     refreshCalculations();
   };
-  const updateItemById = (id, keys): boolean => {
+  const updateItemById = (id: string | number, keys: {[key: string] : any}): boolean => {
     items.forEach((item, index)=>{
       if (item.id === id) {
         items[index] = Object.assign(item, keys);
@@ -72,7 +71,7 @@ export default function EditorPage() {
     refreshCalculations();
     return true;
   };
-  const selectItem = (i) => {
+  const selectItem = (i: ItemType) => {
     if (!i || i.selected) {
       return false;
     }
@@ -105,8 +104,10 @@ export default function EditorPage() {
     }
   }
 
-  function changeName(e) {
-    setName(e.target.value);
+  function changeName(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e && e.target) {
+      setName((e.target as HTMLInputElement).value);
+    }
   }
 
   function reset() {
@@ -140,13 +141,24 @@ export default function EditorPage() {
     items.forEach(item => {
       const side = item.side;
       if (side === INPUT_SIDES[0]) { // Horizontal
-        item.calculatedRow = toFixedNumber(item.row * calculatedData.ratioWidth);
-        item.calculatedColumn = toFixedNumber(item.column * calculatedData.ratioHeight);
-        item.calculated = toFixedNumber(item.minLength * calculatedData.ratioWidth);
+        item.calculatedRow = typeof calculatedData.ratioWidth !== 'undefined' ?
+            toFixedNumber(Number(item.row) * calculatedData.ratioWidth) : Number(item.row);
+
+        item.calculatedColumn = typeof calculatedData.ratioWidth !== 'undefined' ?
+            toFixedNumber(Number(item.column) * calculatedData.ratioWidth) : Number(item.column);
+
+        item.calculated = typeof calculatedData.ratioWidth !== 'undefined' ?
+            toFixedNumber(Number(item.minLength) * calculatedData.ratioWidth) : Number(item.minLength);
+
       } else if (side === INPUT_SIDES[1]) { // Vertical
-        item.calculatedRow = toFixedNumber(item.row * calculatedData.ratioHeight);
-        item.calculatedColumn = toFixedNumber(item.column * calculatedData.ratioWidth);
-        item.calculated = toFixedNumber(item.minLength * calculatedData.ratioHeight);
+        item.calculatedRow = typeof calculatedData.ratioHeight !== 'undefined' ?
+            toFixedNumber(Number(item.row) * calculatedData.ratioHeight) : Number(item.row);
+
+        item.calculatedColumn = typeof calculatedData.ratioWidth !== 'undefined' ?
+            toFixedNumber(Number(item.column) * calculatedData.ratioWidth) : Number(item.column);
+
+        item.calculated = typeof calculatedData.ratioHeight !== 'undefined' ?
+            toFixedNumber(Number(item.minLength) * calculatedData.ratioHeight) : Number(item.minLength);
       }
     });
   }
@@ -156,6 +168,7 @@ export default function EditorPage() {
     if (e && e.target && e.target.value) {
       const numeric = Number(e.target.value);
       if (!Number.isNaN(numeric)) {
+        // @ts-ignore
         calculatedData[key] = numeric;
         calculate = true;
       } else {
@@ -165,7 +178,7 @@ export default function EditorPage() {
 
     } else if (e && e.target && e.target.value === '') {
       // User deleted the value
-      console.error(key, e.target.value);
+      // @ts-ignore
       calculatedData[key] = itemBoundaries[key];
       /*if (itemBoundaries.hasOwnProperty(key)) {
         calculatedData[key] = itemBoundaries[key];
@@ -208,7 +221,7 @@ export default function EditorPage() {
     setCalculatedData(Object.assign({}, calculatedData));
   }
 
-  function deleteItem(itemId) {
+  function deleteItem(itemId: string | number) {
     if (itemId && window.confirm('Are you sure you wish to delete this item?')) {
       setItems(items.filter(i=>i.id !== itemId));
     }
@@ -256,7 +269,7 @@ export default function EditorPage() {
             <input name="name" id="name" type="text"
                    defaultValue={name}
                    className="mr-8 max-w-[180px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                   placeholder="Project Name" onChange={changeName} />
+                   placeholder="Project Name" onChange={(e) => changeName(e)} />
 
             <input name="m21" id="m21" type="number"
                    className="max-w-[80px] bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -442,7 +455,7 @@ export default function EditorPage() {
                            </td>
                         <td className="whitespace-nowrap px-3 py-2 min-w-[98px]">{item.calculated || '-'} cm</td>
                         <td className="whitespace-nowrap px-3 py-2">
-                            <BsFillTrashFill className="cursor-pointer" onClick={(e)=>deleteItem(item.id)}/>
+                            <BsFillTrashFill className="cursor-pointer" onClick={()=>deleteItem(item.id)}/>
                         </td>
                       </tr>
                   ))}
@@ -452,7 +465,8 @@ export default function EditorPage() {
               </div>
             </div>
         {ui.focus !== 'table' &&
-          <div className="overflow-y-hidden overflow-x-hidden float-left h-full" style={{width:ui.focus === 'normal' ? 'calc(100% - 730px)' : ui.focus === 'designer' ? '100%' : '0%'}}>
+          <div className="overflow-y-hidden overflow-x-hidden float-left h-full"
+               style={{width:ui.focus === 'normal' ? 'calc(100% - 730px)' : ui.focus === 'designer' ? '100%' : '0%'}}>
             <SVGDesigner items={items} selectItem={selectItem} updateItemById={updateItemById}
                          calculatedData={calculatedData}
                          isCalculatedOn={calculatedData.isOn}
